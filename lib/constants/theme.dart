@@ -4,11 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   // Re:ttle Design System Colors (matching CSS variables)
   static const Color primaryColor = Color(0xFF22C55E); // Green
-  static const Color primaryDark = Color(0xFF0B3D2E);  // Dark Forest Green
-  static const Color accentLime = Color(0xFFD8F36A);   // Lime Green
-  static const Color mintColor = Color(0xFFF3FBF5);    // Light Mint background
+  static const Color primaryDark = Color(0xFF0B3D2E); // Dark Forest Green
+  static const Color accentLime = Color(0xFFD8F36A); // Lime Green
+  static const Color mintColor = Color(0xFFF3FBF5); // Light Mint background
   static const Color cardBgLight = Colors.white;
-  
+
   static const Color textDark = Color(0xFF132F23);
   static const Color textMuted = Color(0xFF7A9788);
   static const Color borderLight = Color(0xFFE6EFEA);
@@ -69,7 +69,6 @@ class AppTheme {
         primary: primaryColor,
         secondary: primaryDark,
         tertiary: accentLime,
-        background: mintColor,
         surface: cardBgLight,
         error: destructiveColor,
       ),
@@ -84,18 +83,9 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        bodyLarge: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
-          color: textDark,
-        ),
-        bodyMedium: GoogleFonts.plusJakartaSans(
-          fontSize: 13,
-          color: textDark,
-        ),
-        bodySmall: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          color: textMuted,
-        ),
+        bodyLarge: GoogleFonts.plusJakartaSans(fontSize: 14, color: textDark),
+        bodyMedium: GoogleFonts.plusJakartaSans(fontSize: 13, color: textDark),
+        bodySmall: GoogleFonts.plusJakartaSans(fontSize: 11, color: textMuted),
         labelLarge: GoogleFonts.plusJakartaSans(
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -142,39 +132,41 @@ class AppTheme {
         primary: primaryColor,
         secondary: accentLime,
         tertiary: primaryDark,
-        background: bgDark,
         surface: cardBgDark,
         error: destructiveColor,
       ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme).copyWith(
-        titleLarge: GoogleFonts.plusJakartaSans(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          color: textLight,
-        ),
-        titleMedium: GoogleFonts.plusJakartaSans(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textLight,
-        ),
-        bodyLarge: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
-          color: textLight,
-        ),
-        bodyMedium: GoogleFonts.plusJakartaSans(
-          fontSize: 13,
-          color: textLight,
-        ),
-        bodySmall: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          color: Colors.white60,
-        ),
-        labelLarge: GoogleFonts.plusJakartaSans(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: accentLime,
-        ),
-      ),
+      textTheme:
+          GoogleFonts.plusJakartaSansTextTheme(
+            ThemeData.dark().textTheme,
+          ).copyWith(
+            titleLarge: GoogleFonts.plusJakartaSans(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: textLight,
+            ),
+            titleMedium: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textLight,
+            ),
+            bodyLarge: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              color: textLight,
+            ),
+            bodyMedium: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: textLight,
+            ),
+            bodySmall: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: Colors.white60,
+            ),
+            labelLarge: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: accentLime,
+            ),
+          ),
       cardTheme: CardThemeData(
         color: cardBgDark,
         elevation: 0,

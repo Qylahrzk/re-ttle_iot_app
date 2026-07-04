@@ -5,8 +5,9 @@ import '../models/reward.dart';
 import '../models/scan_session.dart';
 
 class SupabaseService {
-  static const String supabaseUrl = 'https://lmvhgqzgvcpxdeqvstvd.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtdmhncXpndmNweGRlcXZzdHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0OTg2ODAsImV4cCI6MjA5NzA3NDY4MH0.yLd_jgngqrIbVQBhTLrBnpUm9C0wesUXlNtFlHbVhYY';
+  static const String supabaseUrl = 'https://rewxzeenlewxzbdnjras.supabase.co';
+  static const String supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJld3h6ZWVubGV3eHpiZG5qcmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNDEzNjAsImV4cCI6MjA5ODcxNzM2MH0.-2eka0oj1DOpxKed9UpPeP2cyCJ4dqrk6pMFootpHw0';
 
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
@@ -16,10 +17,7 @@ class SupabaseService {
 
   // Initialize service
   static Future<void> initialize() async {
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   }
 
   // Auth getters
@@ -28,9 +26,15 @@ class SupabaseService {
   Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
 
   // Sign In
-  Future<AuthResponse> signIn({required String email, required String password}) async {
+  Future<AuthResponse> signIn({
+    required String email,
+    required String password,
+  }) async {
     try {
-      return await client.auth.signInWithPassword(email: email, password: password);
+      return await client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
     } catch (e) {
       rethrow;
     }
@@ -47,10 +51,7 @@ class SupabaseService {
       return await client.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'matric_number': matricNumber,
-          'full_name': fullName,
-        },
+        data: {'matric_number': matricNumber, 'full_name': fullName},
       );
     } catch (e) {
       rethrow;
@@ -88,7 +89,10 @@ class SupabaseService {
   }
 
   // Scan Sessions (Activities)
-  Future<List<ScanSession>> getRecentActivities(String userId, {int limit = 3}) async {
+  Future<List<ScanSession>> getRecentActivities(
+    String userId, {
+    int limit = 3,
+  }) async {
     try {
       final response = await client
           .from('scan_sessions')
@@ -96,14 +100,19 @@ class SupabaseService {
           .eq('user_id', userId)
           .order('created_at', ascending: false)
           .limit(limit);
-      return (response as List).map((json) => ScanSession.fromJson(json)).toList();
+      return (response as List)
+          .map((json) => ScanSession.fromJson(json))
+          .toList();
     } catch (e) {
       print('Error fetching recent activities: $e');
       return [];
     }
   }
 
-  Future<List<ScanSession>> getActivitiesInTimeframe(String userId, DateTime since) async {
+  Future<List<ScanSession>> getActivitiesInTimeframe(
+    String userId,
+    DateTime since,
+  ) async {
     try {
       final response = await client
           .from('scan_sessions')
@@ -111,7 +120,9 @@ class SupabaseService {
           .eq('user_id', userId)
           .gte('created_at', since.toUtc().toIso8601String())
           .order('created_at', ascending: false);
-      return (response as List).map((json) => ScanSession.fromJson(json)).toList();
+      return (response as List)
+          .map((json) => ScanSession.fromJson(json))
+          .toList();
     } catch (e) {
       print('Error fetching filtered activities: $e');
       return [];
