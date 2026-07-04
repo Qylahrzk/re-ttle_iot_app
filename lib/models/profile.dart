@@ -50,7 +50,9 @@ class Profile {
       co2SavedKg: json['co2_saved_kg'] != null 
           ? double.parse(json['co2_saved_kg'].toString()) 
           : 0.0,
-      plasticDivertedG: json['plastic_diverted_g'] as int? ?? 0,
+      plasticDivertedG: json['plastic_diverted_g'] != null 
+          ? (double.parse(json['plastic_diverted_g'].toString())).round() 
+          : 0,
       streakDays: json['streak_days'] as int? ?? 0,
       lastScanDate: json['last_scan_date'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
