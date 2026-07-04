@@ -18,7 +18,10 @@ class SupabaseService {
 
   // Initialize service
   static Future<void> initialize() async {
-    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
+    await Supabase.initialize(
+      url: supabaseUrl,
+      publishableKey: supabaseAnonKey,
+    );
   }
 
   // Auth getters
@@ -108,18 +111,20 @@ class SupabaseService {
     int sinceSeconds = 300, // Last 5 minutes
   }) {
     final since = DateTime.now().subtract(Duration(seconds: sinceSeconds));
-    
+
     return client
         .from('bottle_detections')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .map((detections) => detections.where((d) {
-              final binMatch = d['bin_id'] == binId;
-              final createdAtStr = d['created_at'] as String?;
-              if (createdAtStr == null) return false;
-              final createdAt = DateTime.parse(createdAtStr);
-              return binMatch && createdAt.isAfter(since);
-            }).toList());
+        .map(
+          (detections) => detections.where((d) {
+            final binMatch = d['bin_id'] == binId;
+            final createdAtStr = d['created_at'] as String?;
+            if (createdAtStr == null) return false;
+            final createdAt = DateTime.parse(createdAtStr);
+            return binMatch && createdAt.isAfter(since);
+          }).toList(),
+        );
   }
 
   /// Get bottle count for current session in real-time
@@ -130,18 +135,20 @@ class SupabaseService {
     int sinceSeconds = 300,
   }) {
     final since = DateTime.now().subtract(Duration(seconds: sinceSeconds));
-    
+
     return client
         .from('bottle_detections')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .map((detections) => detections.where((d) {
-              final binMatch = d['bin_id'] == binId;
-              final createdAtStr = d['created_at'] as String?;
-              if (createdAtStr == null) return false;
-              final createdAt = DateTime.parse(createdAtStr);
-              return binMatch && createdAt.isAfter(since);
-            }).length);
+        .map(
+          (detections) => detections.where((d) {
+            final binMatch = d['bin_id'] == binId;
+            final createdAtStr = d['created_at'] as String?;
+            if (createdAtStr == null) return false;
+            final createdAt = DateTime.parse(createdAtStr);
+            return binMatch && createdAt.isAfter(since);
+          }).length,
+        );
   }
 
   /// Get all bottle detections for a user (historical)
@@ -266,9 +273,10 @@ class SupabaseService {
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .order('created_at', ascending: false)
-        .map((maps) => (maps as List)
-            .map((json) => ScanSession.fromJson(json))
-            .toList());
+        .map(
+          (maps) =>
+              (maps as List).map((json) => ScanSession.fromJson(json)).toList(),
+        );
   }
 
   /// Insert scan session (Simulates the end of the IoT process)
@@ -324,9 +332,10 @@ class SupabaseService {
         .stream(primaryKey: ['id'])
         .order('featured', ascending: false)
         .order('points_required', ascending: true)
-        .map((maps) => (maps as List)
-            .map((json) => Reward.fromJson(json))
-            .toList());
+        .map(
+          (maps) =>
+              (maps as List).map((json) => Reward.fromJson(json)).toList(),
+        );
   }
 
   // ============================================================================
@@ -354,9 +363,11 @@ class SupabaseService {
         .stream(primaryKey: ['id'])
         .order('total_points', ascending: false)
         .limit(limit)
-        .map((maps) => (maps as List)
-            .map((json) => Map<String, dynamic>.from(json))
-            .toList());
+        .map(
+          (maps) => (maps as List)
+              .map((json) => Map<String, dynamic>.from(json))
+              .toList(),
+        );
   }
 
   // ============================================================================
@@ -405,9 +416,11 @@ class SupabaseService {
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
         .order('created_at', ascending: false)
-        .map((maps) => (maps as List)
-            .map((json) => Map<String, dynamic>.from(json))
-            .toList());
+        .map(
+          (maps) => (maps as List)
+              .map((json) => Map<String, dynamic>.from(json))
+              .toList(),
+        );
   }
 
   /// Get user's pending redemptions (unclaimed vouchers)
