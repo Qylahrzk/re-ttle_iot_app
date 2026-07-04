@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/profile.dart';
 import '../models/reward.dart';
@@ -17,7 +18,7 @@ class SupabaseService {
 
   // Initialize service
   static Future<void> initialize() async {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
   }
 
   // Auth getters
@@ -104,7 +105,7 @@ class SupabaseService {
   Stream<List<Map<String, dynamic>>> watchBottleDetections(
     String userId,
     String binId, {
-    int sinceSeconds = 300, -- Last 5 minutes
+    int sinceSeconds = 300, // Last 5 minutes
   }) {
     final since = DateTime.now().subtract(Duration(seconds: sinceSeconds));
     
@@ -112,9 +113,13 @@ class SupabaseService {
         .from('bottle_detections')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .eq('bin_id', binId)
-        .gte('created_at', since.toUtc().toIso8601String())
-        .order('created_at', ascending: false);
+        .map((detections) => detections.where((d) {
+              final binMatch = d['bin_id'] == binId;
+              final createdAtStr = d['created_at'] as String?;
+              if (createdAtStr == null) return false;
+              final createdAt = DateTime.parse(createdAtStr);
+              return binMatch && createdAt.isAfter(since);
+            }).toList());
   }
 
   /// Get bottle count for current session in real-time
@@ -130,9 +135,13 @@ class SupabaseService {
         .from('bottle_detections')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .eq('bin_id', binId)
-        .gte('created_at', since.toUtc().toIso8601String())
-        .map((detections) => detections.length);
+        .map((detections) => detections.where((d) {
+              final binMatch = d['bin_id'] == binId;
+              final createdAtStr = d['created_at'] as String?;
+              if (createdAtStr == null) return false;
+              final createdAt = DateTime.parse(createdAtStr);
+              return binMatch && createdAt.isAfter(since);
+            }).length);
   }
 
   /// Get all bottle detections for a user (historical)
@@ -424,10 +433,10 @@ class SupabaseService {
   /// Test connection to Supabase
   Future<bool> testConnection() async {
     try {
-      final response = await client.from('bins').select().limit(1);
+      await client.from('bins').select().limit(1);
       return true;
     } catch (e) {
-      print('Connection test failed: $e');
+      debugPrint('Connection test failed: $e');
       return false;
     }
   }
