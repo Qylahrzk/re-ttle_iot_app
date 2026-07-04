@@ -25,6 +25,10 @@ class SupabaseService {
   bool get isAuthenticated => currentUser != null;
   Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
 
+  // ============================================================================
+  // AUTHENTICATION METHODS
+  // ============================================================================
+
   // Sign In
   Future<AuthResponse> signIn({
     required String email,
@@ -63,7 +67,10 @@ class SupabaseService {
     await client.auth.signOut();
   }
 
-  // Profile methods
+  // ============================================================================
+  // PROFILE METHODS
+  // ============================================================================
+
   Future<Profile?> getProfile(String userId) async {
     try {
       final response = await client
@@ -88,7 +95,121 @@ class SupabaseService {
         .map((maps) => maps.isNotEmpty ? Profile.fromJson(maps.first) : null);
   }
 
-  // Scan Sessions (Activities)
+  // ============================================================================
+  // BOTTLE DETECTION METHODS (IoT Integration)
+  // ============================================================================
+
+  /// Watch bottle detections in real-time (for current scan session)
+  /// Shows count of bottles detected since scan started
+  Stream<List<Map<String, dynamic>>> watchBottleDetections(
+    String userId,
+    String binId, {
+    int sinceSeconds = 300, -- Last 5 minutes
+  }) {
+    final since = DateTime.now().subtract(Duration(seconds: sinceSeconds));
+    
+    return client
+        .from('bottle_detections')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .eq('bin_id', binId)
+        .gte('created_at', since.toUtc().toIso8601String())
+        .order('created_at', ascending: false);
+  }
+
+  /// Get bottle count for current session in real-time
+  /// Useful for display: "3 bottles detected"
+  Stream<int> watchBottleCountForSession(
+    String userId,
+    String binId, {
+    int sinceSeconds = 300,
+  }) {
+    final since = DateTime.now().subtract(Duration(seconds: sinceSeconds));
+    
+    return client
+        .from('bottle_detections')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .eq('bin_id', binId)
+        .gte('created_at', since.toUtc().toIso8601String())
+        .map((detections) => detections.length);
+  }
+
+  /// Get all bottle detections for a user (historical)
+  Future<List<Map<String, dynamic>>> getBottleDetectionHistory(
+    String userId, {
+    int limit = 50,
+  }) async {
+    try {
+      final response = await client
+          .from('bottle_detections')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching bottle detection history: $e');
+      return [];
+    }
+  }
+
+  /// Log a bottle detection (called by ESP32 or Flutter when in test mode)
+  /// This inserts a row into bottle_detections table
+  Future<void> logBottleDetection({
+    required String userId,
+    required String binId,
+    required int weightGrams,
+    int? ultrasonicLevel,
+  }) async {
+    try {
+      await client.from('bottle_detections').insert({
+        'user_id': userId,
+        'bin_id': binId,
+        'weight_grams': weightGrams,
+        'ultrasonic_level': ultrasonicLevel ?? 0,
+        'ir_triggered': true,
+        'detection_timestamp': DateTime.now().millisecondsSinceEpoch,
+        'status': 'logged',
+      });
+    } catch (e) {
+      print('Error logging bottle detection: $e');
+      rethrow;
+    }
+  }
+
+  // ============================================================================
+  // BIN STATUS METHODS
+  // ============================================================================
+
+  /// Watch bin status in real-time (fill level, last detection, etc)
+  Stream<Map<String, dynamic>?> watchBinStatus(String binId) {
+    return client
+        .from('bin_status')
+        .stream(primaryKey: ['bin_id'])
+        .eq('bin_id', binId)
+        .map((maps) => maps.isNotEmpty ? maps.first : null);
+  }
+
+  /// Get current bin status
+  Future<Map<String, dynamic>?> getBinStatus(String binId) async {
+    try {
+      final response = await client
+          .from('bin_status')
+          .select()
+          .eq('bin_id', binId)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      print('Error fetching bin status: $e');
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // SCAN SESSION METHODS
+  // ============================================================================
+
   Future<List<ScanSession>> getRecentActivities(
     String userId, {
     int limit = 3,
@@ -129,7 +250,21 @@ class SupabaseService {
     }
   }
 
-  // Insert scan session (Simulates the end of the IoT process)
+  /// Stream scan sessions in real-time (watch for new sessions)
+  Stream<List<ScanSession>> streamScanSessions(String userId) {
+    return client
+        .from('scan_sessions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .map((maps) => (maps as List)
+            .map((json) => ScanSession.fromJson(json))
+            .toList());
+  }
+
+  /// Insert scan session (Simulates the end of the IoT process)
+  /// This should be called AFTER all bottles have been detected
+  /// The trigger will automatically update user's total_points and total_bottles
   Future<void> insertScanSession({
     required String userId,
     required String binId,
@@ -146,13 +281,19 @@ class SupabaseService {
         'bottle_count': bottleCount,
         'points_earned': pointsEarned,
         'co2_saved_kg': co2Saved,
+        'status': 'completed',
+        'completed_at': DateTime.now().toUtc().toIso8601String(),
       });
     } catch (e) {
+      print('Error inserting scan session: $e');
       rethrow;
     }
   }
 
-  // Rewards methods
+  // ============================================================================
+  // REWARDS METHODS
+  // ============================================================================
+
   Future<List<Reward>> getRewards() async {
     try {
       final response = await client
@@ -167,7 +308,22 @@ class SupabaseService {
     }
   }
 
-  // Leaderboard methods
+  /// Stream rewards in real-time (for live updates)
+  Stream<List<Reward>> streamRewards() {
+    return client
+        .from('rewards')
+        .stream(primaryKey: ['id'])
+        .order('featured', ascending: false)
+        .order('points_required', ascending: true)
+        .map((maps) => (maps as List)
+            .map((json) => Reward.fromJson(json))
+            .toList());
+  }
+
+  // ============================================================================
+  // LEADERBOARD METHODS
+  // ============================================================================
+
   Future<List<Map<String, dynamic>>> getLeaderboard({int limit = 20}) async {
     try {
       final response = await client
@@ -182,7 +338,24 @@ class SupabaseService {
     }
   }
 
-  // Redeem Reward
+  /// Stream leaderboard in real-time (top 20 users by points)
+  Stream<List<Map<String, dynamic>>> streamLeaderboard({int limit = 20}) {
+    return client
+        .from('profiles')
+        .stream(primaryKey: ['id'])
+        .order('total_points', ascending: false)
+        .limit(limit)
+        .map((maps) => (maps as List)
+            .map((json) => Map<String, dynamic>.from(json))
+            .toList());
+  }
+
+  // ============================================================================
+  // REDEMPTION METHODS
+  // ============================================================================
+
+  /// Redeem a reward (deducts points from user)
+  /// The trigger will automatically deduct points from user's total_points
   Future<void> redeemReward({
     required String userId,
     required String rewardId,
@@ -193,13 +366,15 @@ class SupabaseService {
         'user_id': userId,
         'reward_id': rewardId,
         'points_spent': pointsSpent,
+        'status': 'pending',
       });
     } catch (e) {
+      print('Error redeeming reward: $e');
       rethrow;
     }
   }
 
-  // Fetch redemptions (Vouchers redeemed by user)
+  /// Fetch redemptions (Vouchers redeemed by user)
   Future<List<Map<String, dynamic>>> getUserVouchers(String userId) async {
     try {
       final response = await client
@@ -211,6 +386,67 @@ class SupabaseService {
     } catch (e) {
       print('Error fetching vouchers: $e');
       return [];
+    }
+  }
+
+  /// Stream user redemptions in real-time
+  Stream<List<Map<String, dynamic>>> streamUserVouchers(String userId) {
+    return client
+        .from('redemptions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .map((maps) => (maps as List)
+            .map((json) => Map<String, dynamic>.from(json))
+            .toList());
+  }
+
+  /// Get user's pending redemptions (unclaimed vouchers)
+  Future<List<Map<String, dynamic>>> getPendingVouchers(String userId) async {
+    try {
+      final response = await client
+          .from('redemptions')
+          .select('*, rewards(*)')
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Error fetching pending vouchers: $e');
+      return [];
+    }
+  }
+
+  // ============================================================================
+  // DEBUG HELPER METHODS
+  // ============================================================================
+
+  /// Test connection to Supabase
+  Future<bool> testConnection() async {
+    try {
+      final response = await client.from('bins').select().limit(1);
+      return true;
+    } catch (e) {
+      print('Connection test failed: $e');
+      return false;
+    }
+  }
+
+  /// Clear test data (for development only)
+  Future<void> clearTestBottleDetections(String userId, String binId) async {
+    try {
+      if (currentUser?.email?.contains('test') ?? false) {
+        await client
+            .from('bottle_detections')
+            .delete()
+            .eq('user_id', userId)
+            .eq('bin_id', binId);
+        print('Test bottle detections cleared');
+      } else {
+        print('Cannot clear: not a test user');
+      }
+    } catch (e) {
+      print('Error clearing test data: $e');
     }
   }
 }

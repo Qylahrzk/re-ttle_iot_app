@@ -43,15 +43,17 @@ class Profile {
       email: json['email'] as String?,
       faculty: json['faculty'] as String?,
       programme: json['programme'] as String?,
-      semester: json['semester'] is int ? json['semester'] as int : int.parse(json['semester']?.toString() ?? '1'),
+      semester: json['semester'] is int
+          ? json['semester'] as int
+          : int.parse(json['semester']?.toString() ?? '1'),
       avatarUrl: json['avatar_url'] as String?,
       totalPoints: json['total_points'] as int? ?? 0,
       totalBottles: json['total_bottles'] as int? ?? 0,
-      co2SavedKg: json['co2_saved_kg'] != null 
-          ? double.parse(json['co2_saved_kg'].toString()) 
+      co2SavedKg: json['co2_saved_kg'] != null
+          ? double.parse(json['co2_saved_kg'].toString())
           : 0.0,
-      plasticDivertedG: json['plastic_diverted_g'] != null 
-          ? (double.parse(json['plastic_diverted_g'].toString())).round() 
+      plasticDivertedG: json['plastic_diverted_g'] != null
+          ? (double.parse(json['plastic_diverted_g'].toString())).round()
           : 0,
       streakDays: json['streak_days'] as int? ?? 0,
       lastScanDate: json['last_scan_date'] as String?,
