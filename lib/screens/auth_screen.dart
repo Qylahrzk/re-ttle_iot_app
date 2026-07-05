@@ -42,12 +42,18 @@ class _AuthScreenState extends State<AuthScreen> {
     final matric = _matricController.text.trim();
 
     if (!_isUitmEmail(email)) {
-      _showSnackbar('Please use your UiTM email (@student.uitm.edu.my or @uitm.edu.my)', isError: true);
+      _showSnackbar(
+        'Please use your UiTM email (@student.uitm.edu.my or @uitm.edu.my)',
+        isError: true,
+      );
       return;
     }
 
     if (!_isSignInMode && !_isValidMatric(matric)) {
-      _showSnackbar('Enter a valid matric number (8 to 12 digits)', isError: true);
+      _showSnackbar(
+        'Enter a valid matric number (8 to 12 digits)',
+        isError: true,
+      );
       return;
     }
 
@@ -64,11 +70,17 @@ class _AuthScreenState extends State<AuthScreen> {
           matricNumber: matric,
           fullName: email.split('@').first,
         );
-        _showSnackbar('Account created! Please check your email to confirm.', isError: false);
+        _showSnackbar(
+          'Account created! Please check your email to confirm.',
+          isError: false,
+        );
         setState(() => _isSignInMode = true);
       }
     } catch (e) {
-      _showSnackbar(e.toString().replaceAll('Exception:', '').trim(), isError: true);
+      _showSnackbar(
+        e.toString().replaceAll('Exception:', '').trim(),
+        isError: true,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -79,9 +91,15 @@ class _AuthScreenState extends State<AuthScreen> {
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
-        backgroundColor: isError ? AppTheme.destructiveColor : AppTheme.primaryColor,
+        backgroundColor: isError
+            ? AppTheme.destructiveColor
+            : AppTheme.primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(16),
@@ -90,7 +108,10 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _signInGoogle() async {
-    _showSnackbar('Google OAuth is only available in production browser redirect.', isError: true);
+    _showSnackbar(
+      'Google OAuth is only available in production browser redirect.',
+      isError: true,
+    );
   }
 
   @override
@@ -127,10 +148,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         boxShadow: AppTheme.shadowFab,
                       ),
                       child: const Center(
-                        child: Text(
-                          '♻️',
-                          style: TextStyle(fontSize: 40),
-                        ),
+                        child: Text('♻️', style: TextStyle(fontSize: 40)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -138,7 +156,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       'Re:ttle',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontSize: 32,
-                        color: isDark ? AppTheme.textLight : AppTheme.primaryDark,
+                        color: isDark
+                            ? AppTheme.textLight
+                            : AppTheme.primaryDark,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -168,7 +188,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     // Mode Switch Toggle Tab
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF131D18) : AppTheme.borderLight.withOpacity(0.5),
+                        color: isDark
+                            ? const Color(0xFF131D18)
+                            : AppTheme.borderLight.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       padding: const EdgeInsets.all(4),
@@ -180,12 +202,18 @@ class _AuthScreenState extends State<AuthScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: _isSignInMode
-                                      ? (isDark ? AppTheme.cardBgDark : Colors.white)
+                                      ? (isDark
+                                            ? AppTheme.cardBgDark
+                                            : Colors.white)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(100),
-                                  boxShadow: _isSignInMode ? AppTheme.shadowCard : null,
+                                  boxShadow: _isSignInMode
+                                      ? AppTheme.shadowCard
+                                      : null,
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                                 child: Center(
                                   child: Text(
                                     'Sign in',
@@ -193,7 +221,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                       color: _isSignInMode
-                                          ? (isDark ? AppTheme.accentLime : AppTheme.primaryDark)
+                                          ? (isDark
+                                                ? AppTheme.accentLime
+                                                : AppTheme.primaryDark)
                                           : AppTheme.textMuted,
                                     ),
                                   ),
@@ -203,16 +233,23 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () => setState(() => _isSignInMode = false),
+                              onTap: () =>
+                                  setState(() => _isSignInMode = false),
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: !_isSignInMode
-                                      ? (isDark ? AppTheme.cardBgDark : Colors.white)
+                                      ? (isDark
+                                            ? AppTheme.cardBgDark
+                                            : Colors.white)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(100),
-                                  boxShadow: !_isSignInMode ? AppTheme.shadowCard : null,
+                                  boxShadow: !_isSignInMode
+                                      ? AppTheme.shadowCard
+                                      : null,
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                                 child: Center(
                                   child: Text(
                                     'Register',
@@ -220,7 +257,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                       color: !_isSignInMode
-                                          ? (isDark ? AppTheme.accentLime : AppTheme.primaryDark)
+                                          ? (isDark
+                                                ? AppTheme.accentLime
+                                                : AppTheme.primaryDark)
                                           : AppTheme.textMuted,
                                     ),
                                   ),
@@ -244,12 +283,19 @@ class _AuthScreenState extends State<AuthScreen> {
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.next,
                               decoration: const InputDecoration(
-                                prefixIcon: Icon(LucideIcons.graduationCap, size: 20),
+                                prefixIcon: Icon(
+                                  LucideIcons.graduationCap,
+                                  size: 20,
+                                ),
                                 hintText: 'Matric Number (e.g. 2023239326)',
                               ),
                               validator: (val) {
-                                if (val == null || val.isEmpty) return 'Matric number is required';
-                                if (!_isValidMatric(val)) return 'Invalid matric (8-12 digits)';
+                                if (val == null || val.isEmpty) {
+                                  return 'Matric number is required';
+                                }
+                                if (!_isValidMatric(val)) {
+                                  return 'Invalid matric (8-12 digits)';
+                                }
                                 return null;
                               },
                             ),
@@ -264,8 +310,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               hintText: 'UiTM Email',
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Email is required';
-                              if (!_isUitmEmail(val)) return 'Must be a UiTM email';
+                              if (val == null || val.isEmpty) {
+                                return 'Email is required';
+                              }
+                              if (!_isUitmEmail(val)) {
+                                return 'Must be a UiTM email';
+                              }
                               return null;
                             },
                           ),
@@ -280,8 +330,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               hintText: 'Password',
                             ),
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Password is required';
-                              if (val.length < 6) return 'Password must be at least 6 characters';
+                              if (val == null || val.isEmpty) {
+                                return 'Password is required';
+                              }
+                              if (val.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
                               return null;
                             },
                           ),
@@ -301,11 +355,17 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : Text(
                                     _isSignInMode ? 'Login' : 'Create account',
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                           ),
                         ],
@@ -321,7 +381,11 @@ class _AuthScreenState extends State<AuthScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 16.0),
                           child: Text(
                             'OR',
-                            style: TextStyle(fontSize: 10, color: AppTheme.textMuted, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.textMuted,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Expanded(child: Divider(thickness: 1)),
@@ -334,18 +398,28 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: _isLoading ? null : _signInGoogle,
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                          color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                          color: isDark
+                              ? AppTheme.borderDark
+                              : AppTheme.borderLight,
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                      icon: const Icon(LucideIcons.chrome, size: 20, color: AppTheme.primaryColor),
+                      icon: const Icon(
+                        LucideIcons.chrome,
+                        size: 20,
+                        color: AppTheme.primaryColor,
+                      ),
                       label: Text(
                         'Continue with UiTM Google',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppTheme.textLight : AppTheme.textDark,
+                          color: isDark
+                              ? AppTheme.textLight
+                              : AppTheme.textDark,
                         ),
                       ),
                     ),

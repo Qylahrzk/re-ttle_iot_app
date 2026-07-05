@@ -31,7 +31,9 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
   }
 
   @override
@@ -63,35 +65,40 @@ class _ScanScreenState extends State<ScanScreen> {
       // Step 2: Waiting for bottle (2.2s) -> Step 3: Validating weight/IR sensors
       _simulatedProgressTimer = Timer(const Duration(milliseconds: 2200), () {
         if (!mounted) return;
+        setState(() {
           _phase = ScanPhase.validating;
+        });
 
         // Step 3: Validating (1.8s) -> Step 4: Success, upload to Supabase, launch confetti
-        _simulatedProgressTimer = Timer(const Duration(milliseconds: 1800), () async {
-          if (!mounted || _sessionInserted) return;
-          _sessionInserted = true;
+        _simulatedProgressTimer = Timer(
+          const Duration(milliseconds: 1800),
+          () async {
+            if (!mounted || _sessionInserted) return;
+            _sessionInserted = true;
 
-          try {
-            await _supabaseService.insertScanSession(
-              userId: _supabaseService.currentUser!.id,
-              binId: _binId ?? 'BIN-UITM-01',
-              location: 'UiTM Shah Alam · Block A',
-              bottleCount: 1,
-              pointsEarned: 10,
-              co2Saved: 0.2,
-            );
+            try {
+              await _supabaseService.insertScanSession(
+                userId: _supabaseService.currentUser!.id,
+                binId: _binId ?? 'BIN-UITM-01',
+                location: 'UiTM Shah Alam · Block A',
+                bottleCount: 1,
+                pointsEarned: 10,
+                co2Saved: 0.2,
+              );
 
-            if (mounted) {
-              setState(() {
-                _phase = ScanPhase.success;
-              });
-              _confettiController.play();
+              if (mounted) {
+                setState(() {
+                  _phase = ScanPhase.success;
+                });
+                _confettiController.play();
+              }
+            } catch (e) {
+              _sessionInserted = false;
+              _showError(e.toString());
+              _resetScan();
             }
-          } catch (e) {
-            _sessionInserted = false;
-            _showError(e.toString());
-            _resetScan();
-          }
-        });
+          },
+        );
       });
     });
   }
@@ -156,7 +163,7 @@ class _ScanScreenState extends State<ScanScreen> {
             // Scan View Overlay (Darken outer area, highlight middle square)
             ColorFiltered(
               colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.6),
+                Colors.black.withValues(alpha: 0.6),
                 BlendMode.srcOut,
               ),
               child: Stack(
@@ -190,10 +197,26 @@ class _ScanScreenState extends State<ScanScreen> {
                 height: 240,
                 child: Stack(
                   children: [
-                    _buildScannerCorner(Alignment.topLeft, rotateX: false, rotateY: false),
-                    _buildScannerCorner(Alignment.topRight, rotateX: true, rotateY: false),
-                    _buildScannerCorner(Alignment.bottomLeft, rotateX: false, rotateY: true),
-                    _buildScannerCorner(Alignment.bottomRight, rotateX: true, rotateY: true),
+                    _buildScannerCorner(
+                      Alignment.topLeft,
+                      rotateX: false,
+                      rotateY: false,
+                    ),
+                    _buildScannerCorner(
+                      Alignment.topRight,
+                      rotateX: true,
+                      rotateY: false,
+                    ),
+                    _buildScannerCorner(
+                      Alignment.bottomLeft,
+                      rotateX: false,
+                      rotateY: true,
+                    ),
+                    _buildScannerCorner(
+                      Alignment.bottomRight,
+                      rotateX: true,
+                      rotateY: true,
+                    ),
                   ],
                 ),
               ),
@@ -208,19 +231,21 @@ class _ScanScreenState extends State<ScanScreen> {
             Container(
               width: size.width,
               height: size.height,
-              decoration: const BoxDecoration(
-                gradient: AppTheme.gradientHero,
+              decoration: const BoxDecoration(gradient: AppTheme.gradientHero),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 48.0,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
-              child: Center(
-                child: _buildIotPanel(isDark),
-              ),
+              child: Center(child: _buildIotPanel(isDark)),
             ),
 
           // 3. Header controls (Back, Page title, Torch toggle)
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -232,10 +257,14 @@ class _ScanScreenState extends State<ScanScreen> {
                       height: 40,
                       width: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 20),
+                      child: const Icon(
+                        LucideIcons.arrowLeft,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                   const Text(
@@ -258,7 +287,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         height: 40,
                         width: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -298,11 +327,16 @@ class _ScanScreenState extends State<ScanScreen> {
                               height: 40,
                               width: 40,
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withOpacity(0.15),
+                                color: AppTheme.primaryColor.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Center(
-                                child: Text('📷', style: TextStyle(fontSize: 18)),
+                                child: Text(
+                                  '📷',
+                                  style: TextStyle(fontSize: 18),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -338,8 +372,12 @@ class _ScanScreenState extends State<ScanScreen> {
                           });
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark ? AppTheme.cardBgDark : Colors.white,
-                          foregroundColor: isDark ? AppTheme.textLight : AppTheme.textDark,
+                          backgroundColor: isDark
+                              ? AppTheme.cardBgDark
+                              : Colors.white,
+                          foregroundColor: isDark
+                              ? AppTheme.textLight
+                              : AppTheme.textDark,
                           elevation: 0,
                           minimumSize: const Size(double.infinity, 50),
                           shape: RoundedRectangleBorder(
@@ -349,7 +387,10 @@ class _ScanScreenState extends State<ScanScreen> {
                         icon: const Icon(LucideIcons.keyboard, size: 18),
                         label: const Text(
                           'Enter Code',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -371,9 +412,16 @@ class _ScanScreenState extends State<ScanScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: isDark ? AppTheme.cardBgDark : Colors.white,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(28),
+                        ),
                       ),
-                      padding: EdgeInsets.fromLTRB(24, 16, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        16,
+                        24,
+                        24 + MediaQuery.of(context).viewInsets.bottom,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +442,9 @@ class _ScanScreenState extends State<ScanScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? AppTheme.textLight : AppTheme.textDark,
+                              color: isDark
+                                  ? AppTheme.textLight
+                                  : AppTheme.textDark,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -438,7 +488,11 @@ class _ScanScreenState extends State<ScanScreen> {
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
               shouldLoop: false,
-              colors: const [AppTheme.primaryColor, AppTheme.accentLime, AppTheme.primaryDark],
+              colors: const [
+                AppTheme.primaryColor,
+                AppTheme.accentLime,
+                AppTheme.primaryDark,
+              ],
             ),
           ),
         ],
@@ -446,7 +500,11 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 
-  Widget _buildScannerCorner(Alignment alignment, {required bool rotateX, required bool rotateY}) {
+  Widget _buildScannerCorner(
+    Alignment alignment, {
+    required bool rotateX,
+    required bool rotateY,
+  }) {
     return Align(
       alignment: alignment,
       child: Container(
@@ -454,10 +512,18 @@ class _ScanScreenState extends State<ScanScreen> {
         height: 32,
         decoration: BoxDecoration(
           border: Border(
-            top: !rotateY ? const BorderSide(color: AppTheme.primaryColor, width: 4) : BorderSide.none,
-            bottom: rotateY ? const BorderSide(color: AppTheme.primaryColor, width: 4) : BorderSide.none,
-            left: !rotateX ? const BorderSide(color: AppTheme.primaryColor, width: 4) : BorderSide.none,
-            right: rotateX ? const BorderSide(color: AppTheme.primaryColor, width: 4) : BorderSide.none,
+            top: !rotateY
+                ? const BorderSide(color: AppTheme.primaryColor, width: 4)
+                : BorderSide.none,
+            bottom: rotateY
+                ? const BorderSide(color: AppTheme.primaryColor, width: 4)
+                : BorderSide.none,
+            left: !rotateX
+                ? const BorderSide(color: AppTheme.primaryColor, width: 4)
+                : BorderSide.none,
+            right: rotateX
+                ? const BorderSide(color: AppTheme.primaryColor, width: 4)
+                : BorderSide.none,
           ),
         ),
       ),
@@ -498,10 +564,7 @@ class _ScanScreenState extends State<ScanScreen> {
             const Text(
               'Great job! You\'ve recycled a plastic bottle.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white70,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.white70),
             ),
             const SizedBox(height: 24),
             Container(
@@ -518,7 +581,11 @@ class _ScanScreenState extends State<ScanScreen> {
                       children: [
                         Text(
                           'Points',
-                          style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         const Text(
@@ -538,7 +605,11 @@ class _ScanScreenState extends State<ScanScreen> {
                       children: [
                         Text(
                           'CO₂ Saved',
-                          style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textMuted,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         const Text(
@@ -558,14 +629,18 @@ class _ScanScreenState extends State<ScanScreen> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: const Text(
                 '♻️ Recycling one bottle saves enough energy to power a lightbulb for 3 hours.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: Colors.white, height: 1.3),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white,
+                  height: 1.3,
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -607,10 +682,26 @@ class _ScanScreenState extends State<ScanScreen> {
 
     // IoT connection sequence tracker
     final steps = [
-      {'key': ScanPhase.connecting, 'label': 'Connecting to bin…', 'icon': LucideIcons.wifi},
-      {'key': 'connected', 'label': 'ESP32 ${_binId ?? "BIN-UITM-01"} online', 'icon': LucideIcons.cpu},
-      {'key': ScanPhase.waiting, 'label': 'Insert your bottle', 'icon': LucideIcons.activity},
-      {'key': ScanPhase.validating, 'label': 'Validating sensors…', 'icon': LucideIcons.loader2},
+      {
+        'key': ScanPhase.connecting,
+        'label': 'Connecting to bin…',
+        'icon': LucideIcons.wifi,
+      },
+      {
+        'key': 'connected',
+        'label': 'ESP32 ${_binId ?? "BIN-UITM-01"} online',
+        'icon': LucideIcons.cpu,
+      },
+      {
+        'key': ScanPhase.waiting,
+        'label': 'Insert your bottle',
+        'icon': LucideIcons.activity,
+      },
+      {
+        'key': ScanPhase.validating,
+        'label': 'Validating sensors…',
+        'icon': LucideIcons.loader2,
+      },
     ];
 
     String stepTitle = 'Connecting…';
@@ -629,10 +720,7 @@ class _ScanScreenState extends State<ScanScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            '🍶',
-            style: TextStyle(fontSize: 72),
-          ),
+          const Text('🍶', style: TextStyle(fontSize: 72)),
           const SizedBox(height: 16),
           Text(
             stepTitle,
@@ -646,10 +734,7 @@ class _ScanScreenState extends State<ScanScreen> {
           Text(
             stepDesc,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.white70,
-            ),
+            style: const TextStyle(fontSize: 13, color: Colors.white70),
           ),
           const SizedBox(height: 24),
           Container(
@@ -668,10 +753,12 @@ class _ScanScreenState extends State<ScanScreen> {
                 if (_phase == ScanPhase.connecting) {
                   isActive = stepKey == ScanPhase.connecting;
                 } else if (_phase == ScanPhase.waiting) {
-                  isDone = stepKey == ScanPhase.connecting || stepKey == 'connected';
+                  isDone =
+                      stepKey == ScanPhase.connecting || stepKey == 'connected';
                   isActive = stepKey == ScanPhase.waiting;
                 } else if (_phase == ScanPhase.validating) {
-                  isDone = stepKey == ScanPhase.connecting ||
+                  isDone =
+                      stepKey == ScanPhase.connecting ||
                       stepKey == 'connected' ||
                       stepKey == ScanPhase.waiting;
                   isActive = stepKey == ScanPhase.validating;
@@ -689,7 +776,11 @@ class _ScanScreenState extends State<ScanScreen> {
 
                 Widget iconWidget;
                 if (isDone) {
-                  iconWidget = const Icon(LucideIcons.checkCircle2, color: Colors.white, size: 14);
+                  iconWidget = const Icon(
+                    LucideIcons.checkCircle2,
+                    color: Colors.white,
+                    size: 14,
+                  );
                 } else {
                   iconWidget = Icon(
                     step['icon'] as IconData,
@@ -717,10 +808,16 @@ class _ScanScreenState extends State<ScanScreen> {
                           step['label'] as String,
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: isDone || isActive ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isDone || isActive
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             color: isDark
-                                ? (isDone || isActive ? Colors.white : Colors.white38)
-                                : (isDone || isActive ? AppTheme.textDark : AppTheme.textMuted),
+                                ? (isDone || isActive
+                                      ? Colors.white
+                                      : Colors.white38)
+                                : (isDone || isActive
+                                      ? AppTheme.textDark
+                                      : AppTheme.textMuted),
                           ),
                         ),
                       ),
@@ -728,6 +825,28 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                 );
               }).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              _supabaseService.logTestBottleDetection(
+                _supabaseService.currentUser!.id,
+                _binId ?? 'BIN-UITM-01',
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentLime,
+              foregroundColor: AppTheme.primaryDark,
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(LucideIcons.activity, size: 16),
+            label: const Text(
+              'TEST: Simulate Bottle',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -743,7 +862,8 @@ class ScanningLineEffect extends StatefulWidget {
   State<ScanningLineEffect> createState() => _ScanningLineEffectState();
 }
 
-class _ScanningLineEffectState extends State<ScanningLineEffect> with SingleTickerProviderStateMixin {
+class _ScanningLineEffectState extends State<ScanningLineEffect>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _animation;
 
@@ -781,7 +901,7 @@ class _ScanningLineEffectState extends State<ScanningLineEffect> with SingleTick
                   color: AppTheme.primaryColor,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.8),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.8),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),

@@ -23,7 +23,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
     'Lifestyle',
     'Shopping',
     'Transportation',
-    'Eco Products'
+    'Eco Products',
   ];
 
   String _activeCategory = 'All';
@@ -39,7 +39,9 @@ class _RewardsScreenState extends State<RewardsScreen> {
   void initState() {
     super.initState();
     _loadRewards();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.trim();
@@ -64,7 +66,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
         });
       }
     } catch (e) {
-      print('Error loading rewards: $e');
+      debugPrint('Error loading rewards: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -75,7 +77,10 @@ class _RewardsScreenState extends State<RewardsScreen> {
     if (profile == null) return;
 
     if (profile.totalPoints < reward.pointsRequired) {
-      _showToast('Need ${reward.pointsRequired - profile.totalPoints} more pts', isError: true);
+      _showToast(
+        'Need ${reward.pointsRequired - profile.totalPoints} more pts',
+        isError: true,
+      );
       return;
     }
 
@@ -93,7 +98,10 @@ class _RewardsScreenState extends State<RewardsScreen> {
         _showToast('Redeemed: ${reward.title}', isError: false);
       }
     } catch (e) {
-      _showToast(e.toString().replaceAll('Exception:', '').trim(), isError: true);
+      _showToast(
+        e.toString().replaceAll('Exception:', '').trim(),
+        isError: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _redeemingId = null);
@@ -108,7 +116,9 @@ class _RewardsScreenState extends State<RewardsScreen> {
           message,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
-        backgroundColor: isError ? AppTheme.destructiveColor : AppTheme.primaryColor,
+        backgroundColor: isError
+            ? AppTheme.destructiveColor
+            : AppTheme.primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(16),
@@ -124,10 +134,14 @@ class _RewardsScreenState extends State<RewardsScreen> {
 
     // Filter logic
     final filteredRewards = _rewards.where((r) {
-      final matchCategory = _activeCategory == 'All' || r.category == _activeCategory;
-      final matchQuery = _searchQuery.isEmpty ||
+      final matchCategory =
+          _activeCategory == 'All' || r.category == _activeCategory;
+      final matchQuery =
+          _searchQuery.isEmpty ||
           r.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (r.description ?? '').toLowerCase().contains(_searchQuery.toLowerCase());
+          (r.description ?? '').toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          );
       return matchCategory && matchQuery;
     }).toList();
 
@@ -150,14 +164,19 @@ class _RewardsScreenState extends State<RewardsScreen> {
               children: [
                 // Top header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 12.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Rewards',
                         style: theme.textTheme.titleLarge?.copyWith(
-                          color: isDark ? AppTheme.textLight : AppTheme.primaryDark,
+                          color: isDark
+                              ? AppTheme.textLight
+                              : AppTheme.primaryDark,
                           fontSize: 24,
                         ),
                       ),
@@ -166,11 +185,16 @@ class _RewardsScreenState extends State<RewardsScreen> {
                           color: isDark ? AppTheme.cardBgDark : Colors.white,
                           borderRadius: BorderRadius.circular(100),
                           border: Border.all(
-                            color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                            color: isDark
+                                ? AppTheme.borderDark
+                                : AppTheme.borderLight,
                           ),
                           boxShadow: AppTheme.shadowCard,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -179,13 +203,18 @@ class _RewardsScreenState extends State<RewardsScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? AppTheme.accentLime : AppTheme.primaryDark,
+                                color: isDark
+                                    ? AppTheme.accentLime
+                                    : AppTheme.primaryDark,
                               ),
                             ),
                             const SizedBox(width: 4),
                             const Text(
                               '★',
-                              style: TextStyle(color: Colors.amber, fontSize: 13),
+                              style: TextStyle(
+                                color: Colors.amber,
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -204,10 +233,14 @@ class _RewardsScreenState extends State<RewardsScreen> {
                         if (featuredReward != null) ...[
                           Container(
                             decoration: BoxDecoration(
-                              color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
+                              color: isDark
+                                  ? AppTheme.cardBgDark
+                                  : AppTheme.cardBgLight,
                               borderRadius: BorderRadius.circular(28),
                               border: Border.all(
-                                color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                                color: isDark
+                                    ? AppTheme.borderDark
+                                    : AppTheme.borderLight,
                               ),
                               boxShadow: AppTheme.shadowCard,
                             ),
@@ -218,7 +251,9 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                 Container(
                                   height: 120,
                                   color: isDark
-                                      ? AppTheme.primaryDark.withOpacity(0.3)
+                                      ? AppTheme.primaryDark.withValues(
+                                          alpha: 0.3,
+                                        )
                                       : AppTheme.mintColor,
                                   child: Center(
                                     child: Text(
@@ -230,10 +265,12 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                 Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Expanded(
                                             child: Text(
@@ -246,10 +283,15 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                           ),
                                           Container(
                                             decoration: BoxDecoration(
-                                              color: AppTheme.primaryColor.withOpacity(0.12),
-                                              borderRadius: BorderRadius.circular(100),
+                                              color: AppTheme.primaryColor
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
                                             ),
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
                                             child: Text(
                                               '$featuredPercent%',
                                               style: const TextStyle(
@@ -269,20 +311,27 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                         ),
                                       const SizedBox(height: 12),
                                       ClipRRect(
-                                        borderRadius: BorderRadius.circular(100),
+                                        borderRadius: BorderRadius.circular(
+                                          100,
+                                        ),
                                         child: LinearProgressIndicator(
                                           value: featuredProgress,
                                           minHeight: 8,
                                           backgroundColor: isDark
                                               ? Colors.white10
-                                              : AppTheme.primaryColor.withOpacity(0.1),
-                                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                                              : AppTheme.primaryColor
+                                                    .withValues(alpha: 0.1),
+                                          valueColor:
+                                              const AlwaysStoppedAnimation<
+                                                Color
+                                              >(AppTheme.primaryColor),
                                         ),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         '${points.clamp(0, featuredReward.pointsRequired)} / ${featuredReward.pointsRequired} pts to unlock',
-                                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(fontSize: 11),
                                       ),
                                     ],
                                   ),
@@ -309,7 +358,8 @@ class _RewardsScreenState extends State<RewardsScreen> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: _categories.length,
-                            separatorBuilder: (context, index) => const SizedBox(width: 8),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(width: 8),
                             itemBuilder: (context, index) {
                               final category = _categories[index];
                               final isActive = _activeCategory == category;
@@ -321,19 +371,30 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    gradient: isActive ? AppTheme.gradientPrimary : null,
+                                    gradient: isActive
+                                        ? AppTheme.gradientPrimary
+                                        : null,
                                     color: isActive
                                         ? null
-                                        : (isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight),
+                                        : (isDark
+                                              ? AppTheme.cardBgDark
+                                              : AppTheme.cardBgLight),
                                     borderRadius: BorderRadius.circular(100),
                                     border: Border.all(
                                       color: isActive
                                           ? Colors.transparent
-                                          : (isDark ? AppTheme.borderDark : AppTheme.borderLight),
+                                          : (isDark
+                                                ? AppTheme.borderDark
+                                                : AppTheme.borderLight),
                                     ),
-                                    boxShadow: isActive ? AppTheme.shadowFab : AppTheme.shadowCard,
+                                    boxShadow: isActive
+                                        ? AppTheme.shadowFab
+                                        : AppTheme.shadowCard,
                                   ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   child: Center(
                                     child: Text(
                                       category,
@@ -356,11 +417,17 @@ class _RewardsScreenState extends State<RewardsScreen> {
                         // List Header
                         Row(
                           children: [
-                            const Icon(LucideIcons.sparkles, color: Colors.amber, size: 16),
+                            const Icon(
+                              LucideIcons.sparkles,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'Available for you',
-                              style: theme.textTheme.titleMedium?.copyWith(fontSize: 14),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -375,127 +442,169 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                 ),
                               )
                             : filteredRewards.isEmpty
-                                ? Container(
-                                    decoration: BoxDecoration(
-                                      color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
-                                      borderRadius: BorderRadius.circular(28),
-                                      border: Border.all(
-                                        color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                            ? Container(
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppTheme.cardBgDark
+                                      : AppTheme.cardBgLight,
+                                  borderRadius: BorderRadius.circular(28),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppTheme.borderDark
+                                        : AppTheme.borderLight,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(40),
+                                child: const Column(
+                                  children: [
+                                    Text('🎟️', style: TextStyle(fontSize: 36)),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'No matching rewards found.',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppTheme.textMuted,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    padding: const EdgeInsets.all(40),
-                                    child: const Column(
+                                  ],
+                                ),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: filteredRewards.length,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final reward = filteredRewards[index];
+                                  final affordable =
+                                      points >= reward.pointsRequired;
+                                  final isRedeeming = _redeemingId == reward.id;
+
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? AppTheme.cardBgDark
+                                          : AppTheme.cardBgLight,
+                                      borderRadius: BorderRadius.circular(28),
+                                      border: Border.all(
+                                        color: isDark
+                                            ? AppTheme.borderDark
+                                            : AppTheme.borderLight,
+                                      ),
+                                      boxShadow: AppTheme.shadowCard,
+                                    ),
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
                                       children: [
-                                        Text('🎟️', style: TextStyle(fontSize: 36)),
-                                        SizedBox(height: 8),
-                                        Text(
-                                          'No matching rewards found.',
-                                          style: TextStyle(fontSize: 13, color: AppTheme.textMuted, fontWeight: FontWeight.bold),
-                                        )
+                                        Container(
+                                          height: 56,
+                                          width: 56,
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? AppTheme.primaryDark
+                                                      .withValues(alpha: 0.4)
+                                                : AppTheme.mintColor,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              reward.imageEmoji ?? '🎁',
+                                              style: const TextStyle(
+                                                fontSize: 32,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                reward.title,
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              if (reward.description !=
+                                                  null) ...[
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  reward.description!,
+                                                  style:
+                                                      theme.textTheme.bodySmall,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${reward.pointsRequired} ★ · ${reward.category}',
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.primaryColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed:
+                                              (!affordable || isRedeeming)
+                                              ? null
+                                              : () => _redeem(reward),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                AppTheme.primaryColor,
+                                            foregroundColor: Colors.white,
+                                            disabledBackgroundColor: isDark
+                                                ? Colors.white10
+                                                : Colors.black12,
+                                            disabledForegroundColor:
+                                                AppTheme.textMuted,
+                                            elevation: 0,
+                                            minimumSize: const Size(68, 36),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                            ),
+                                          ),
+                                          child: isRedeeming
+                                              ? const SizedBox(
+                                                  height: 14,
+                                                  width: 14,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: Colors.white,
+                                                      ),
+                                                )
+                                              : Text(
+                                                  affordable
+                                                      ? 'Redeem'
+                                                      : 'Locked',
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                        ),
                                       ],
                                     ),
-                                  )
-                                : ListView.separated(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    itemCount: filteredRewards.length,
-                                    separatorBuilder: (context, index) => const SizedBox(height: 12),
-                                    itemBuilder: (context, index) {
-                                      final reward = filteredRewards[index];
-                                      final affordable = points >= reward.pointsRequired;
-                                      final isRedeeming = _redeemingId == reward.id;
-
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
-                                          borderRadius: BorderRadius.circular(28),
-                                          border: Border.all(
-                                            color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
-                                          ),
-                                          boxShadow: AppTheme.shadowCard,
-                                        ),
-                                        padding: const EdgeInsets.all(16),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              height: 56,
-                                              width: 56,
-                                              decoration: BoxDecoration(
-                                                color: isDark
-                                                    ? AppTheme.primaryDark.withOpacity(0.4)
-                                                    : AppTheme.mintColor,
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  reward.imageEmoji ?? '🎁',
-                                                  style: const TextStyle(fontSize: 32),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    reward.title,
-                                                    style: const TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  if (reward.description != null) ...[
-                                                    const SizedBox(height: 2),
-                                                    Text(
-                                                      reward.description!,
-                                                      style: theme.textTheme.bodySmall,
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ],
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    '${reward.pointsRequired} ★ · ${reward.category}',
-                                                    style: const TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: AppTheme.primaryColor,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: (!affordable || isRedeeming) ? null : () => _redeem(reward),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppTheme.primaryColor,
-                                                foregroundColor: Colors.white,
-                                                disabledBackgroundColor: isDark ? Colors.white10 : Colors.black12,
-                                                disabledForegroundColor: AppTheme.textMuted,
-                                                elevation: 0,
-                                                minimumSize: const Size(68, 36),
-                                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(100),
-                                                ),
-                                              ),
-                                              child: isRedeeming
-                                                  ? const SizedBox(
-                                                      height: 14,
-                                                      width: 14,
-                                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                                    )
-                                                  : Text(
-                                                      affordable ? 'Redeem' : 'Locked',
-                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                    ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                  );
+                                },
+                              ),
                       ],
                     ),
                   ),
@@ -511,7 +620,11 @@ class _RewardsScreenState extends State<RewardsScreen> {
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
               shouldLoop: false,
-              colors: const [Colors.amber, AppTheme.primaryColor, AppTheme.accentLime],
+              colors: const [
+                Colors.amber,
+                AppTheme.primaryColor,
+                AppTheme.accentLime,
+              ],
             ),
           ),
         ],

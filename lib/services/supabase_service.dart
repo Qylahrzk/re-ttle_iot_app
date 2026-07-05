@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/profile.dart';
@@ -85,7 +86,7 @@ class SupabaseService {
       if (response == null) return null;
       return Profile.fromJson(response);
     } catch (e) {
-      print('Error getting profile: $e');
+      debugPrint('Error getting profile: $e');
       return null;
     }
   }
@@ -165,7 +166,7 @@ class SupabaseService {
           .limit(limit);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('Error fetching bottle detection history: $e');
+      debugPrint('Error fetching bottle detection history: $e');
       return [];
     }
   }
@@ -189,7 +190,7 @@ class SupabaseService {
         'status': 'logged',
       });
     } catch (e) {
-      print('Error logging bottle detection: $e');
+      debugPrint('Error logging bottle detection: $e');
       rethrow;
     }
   }
@@ -217,7 +218,7 @@ class SupabaseService {
           .maybeSingle();
       return response;
     } catch (e) {
-      print('Error fetching bin status: $e');
+      debugPrint('Error fetching bin status: $e');
       return null;
     }
   }
@@ -241,7 +242,7 @@ class SupabaseService {
           .map((json) => ScanSession.fromJson(json))
           .toList();
     } catch (e) {
-      print('Error fetching recent activities: $e');
+      debugPrint('Error fetching recent activities: $e');
       return [];
     }
   }
@@ -261,7 +262,7 @@ class SupabaseService {
           .map((json) => ScanSession.fromJson(json))
           .toList();
     } catch (e) {
-      print('Error fetching filtered activities: $e');
+      debugPrint('Error fetching filtered activities: $e');
       return [];
     }
   }
@@ -302,7 +303,7 @@ class SupabaseService {
         'completed_at': DateTime.now().toUtc().toIso8601String(),
       });
     } catch (e) {
-      print('Error inserting scan session: $e');
+      debugPrint('Error inserting scan session: $e');
       rethrow;
     }
   }
@@ -320,7 +321,7 @@ class SupabaseService {
           .order('points_required', ascending: true);
       return (response as List).map((json) => Reward.fromJson(json)).toList();
     } catch (e) {
-      print('Error fetching rewards: $e');
+      debugPrint('Error fetching rewards: $e');
       return [];
     }
   }
@@ -351,7 +352,7 @@ class SupabaseService {
           .limit(limit);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('Error fetching leaderboard: $e');
+      debugPrint('Error fetching leaderboard: $e');
       return [];
     }
   }
@@ -389,7 +390,7 @@ class SupabaseService {
         'status': 'pending',
       });
     } catch (e) {
-      print('Error redeeming reward: $e');
+      debugPrint('Error redeeming reward: $e');
       rethrow;
     }
   }
@@ -404,7 +405,7 @@ class SupabaseService {
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('Error fetching vouchers: $e');
+      debugPrint('Error fetching vouchers: $e');
       return [];
     }
   }
@@ -434,7 +435,7 @@ class SupabaseService {
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('Error fetching pending vouchers: $e');
+      debugPrint('Error fetching pending vouchers: $e');
       return [];
     }
   }
@@ -463,12 +464,21 @@ class SupabaseService {
             .delete()
             .eq('user_id', userId)
             .eq('bin_id', binId);
-        print('Test bottle detections cleared');
+        debugPrint('Test bottle detections cleared');
       } else {
-        print('Cannot clear: not a test user');
+        debugPrint('Cannot clear: not a test user');
       }
     } catch (e) {
-      print('Error clearing test data: $e');
+      debugPrint('Error clearing test data: $e');
     }
+  }
+
+  // For testing WITHOUT ESP32
+  Future<void> logTestBottleDetection(String userId, String binId) async {
+    await logBottleDetection(
+      userId: userId,
+      binId: binId.isEmpty ? 'BIN_001' : binId,
+      weightGrams: 450 + math.Random().nextInt(200),
+    );
   }
 }

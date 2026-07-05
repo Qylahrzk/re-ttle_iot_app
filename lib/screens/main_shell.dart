@@ -63,20 +63,21 @@ class _MainShellState extends State<MainShell> {
         ];
 
         return Scaffold(
-          body: IndexedStack(
-            index: _currentIndex,
-            children: screens,
-          ),
+          body: IndexedStack(index: _currentIndex, children: screens),
           extendBody: true,
           bottomNavigationBar: SafeArea(
             child: Container(
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.cardBgDark.withOpacity(0.9) : Colors.white.withOpacity(0.9),
+                color: isDark
+                    ? AppTheme.cardBgDark.withValues(alpha: 0.9)
+                    : Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: isDark ? AppTheme.borderDark : AppTheme.borderLight.withOpacity(0.6),
+                  color: isDark
+                      ? AppTheme.borderDark
+                      : AppTheme.borderLight.withValues(alpha: 0.6),
                 ),
                 boxShadow: AppTheme.shadowCard,
               ),

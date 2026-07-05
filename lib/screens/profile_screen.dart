@@ -21,10 +21,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loadingLeaderboard = false;
 
   final List<Map<String, dynamic>> _achievements = [
-    {'id': 'eco-starter', 'title': 'Eco Starter', 'emoji': '🌱', 'threshold': 1, 'type': 'bottles'},
-    {'id': 'streak', 'title': '7-Day Streak', 'emoji': '🔥', 'threshold': 7, 'type': 'streak'},
-    {'id': 'ocean', 'title': 'Ocean Saver', 'emoji': '🌊', 'threshold': 25, 'type': 'bottles'},
-    {'id': 'hero', 'title': 'Bottle Hero', 'emoji': '🦸', 'threshold': 50, 'type': 'bottles'},
+    {
+      'id': 'eco-starter',
+      'title': 'Eco Starter',
+      'emoji': '🌱',
+      'threshold': 1,
+      'type': 'bottles',
+    },
+    {
+      'id': 'streak',
+      'title': '7-Day Streak',
+      'emoji': '🔥',
+      'threshold': 7,
+      'type': 'streak',
+    },
+    {
+      'id': 'ocean',
+      'title': 'Ocean Saver',
+      'emoji': '🌊',
+      'threshold': 25,
+      'type': 'bottles',
+    },
+    {
+      'id': 'hero',
+      'title': 'Bottle Hero',
+      'emoji': '🦸',
+      'threshold': 50,
+      'type': 'bottles',
+    },
   ];
 
   @override
@@ -51,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     } catch (e) {
-      print('Error loading leaderboard: $e');
+      debugPrint('Error loading leaderboard: $e');
     } finally {
       if (mounted) setState(() => _loadingLeaderboard = false);
     }
@@ -78,14 +102,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final initials = widget.profile?.fullName != null && widget.profile!.fullName!.trim().isNotEmpty
+    final initials =
+        widget.profile?.fullName != null &&
+            widget.profile!.fullName!.trim().isNotEmpty
         ? widget.profile!.fullName!
-            .split(' ')
-            .where((word) => word.isNotEmpty)
-            .map((word) => word[0])
-            .take(2)
-            .join()
-            .toUpperCase()
+              .split(' ')
+              .where((word) => word.isNotEmpty)
+              .map((word) => word[0])
+              .take(2)
+              .join()
+              .toUpperCase()
         : 'ME';
 
     final myRank = _getMyRank();
@@ -97,7 +123,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             // Top Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -115,12 +144,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: isDark ? AppTheme.cardBgDark : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                        color: isDark
+                            ? AppTheme.borderDark
+                            : AppTheme.borderLight,
                       ),
                       boxShadow: AppTheme.shadowCard,
                     ),
                     child: Icon(
-                      _activeTab == 'profile' ? LucideIcons.settings : LucideIcons.share2,
+                      _activeTab == 'profile'
+                          ? LucideIcons.settings
+                          : LucideIcons.share2,
                       size: 16,
                     ),
                   ),
@@ -130,10 +163,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // Tab Selector
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 4.0,
+              ),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.cardBgDark : AppTheme.borderLight.withOpacity(0.5),
+                  color: isDark
+                      ? AppTheme.cardBgDark
+                      : AppTheme.borderLight.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(100),
                 ),
                 padding: const EdgeInsets.all(4),
@@ -148,7 +186,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ? (isDark ? AppTheme.bgDark : Colors.white)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(100),
-                            boxShadow: _activeTab == 'profile' ? AppTheme.shadowCard : null,
+                            boxShadow: _activeTab == 'profile'
+                                ? AppTheme.shadowCard
+                                : null,
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Center(
@@ -158,7 +198,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: _activeTab == 'profile'
-                                    ? (isDark ? AppTheme.accentLime : AppTheme.primaryDark)
+                                    ? (isDark
+                                          ? AppTheme.accentLime
+                                          : AppTheme.primaryDark)
                                     : AppTheme.textMuted,
                               ),
                             ),
@@ -175,7 +217,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ? (isDark ? AppTheme.bgDark : Colors.white)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(100),
-                            boxShadow: _activeTab == 'leaderboard' ? AppTheme.shadowCard : null,
+                            boxShadow: _activeTab == 'leaderboard'
+                                ? AppTheme.shadowCard
+                                : null,
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Center(
@@ -185,7 +229,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: _activeTab == 'leaderboard'
-                                    ? (isDark ? AppTheme.accentLime : AppTheme.primaryDark)
+                                    ? (isDark
+                                          ? AppTheme.accentLime
+                                          : AppTheme.primaryDark)
                                     : AppTheme.textMuted,
                               ),
                             ),
@@ -214,7 +260,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileTab(String initials, int myRank, bool isDark, ThemeData theme) {
+  Widget _buildProfileTab(
+    String initials,
+    int myRank,
+    bool isDark,
+    ThemeData theme,
+  ) {
     final profile = widget.profile;
 
     return Column(
@@ -243,13 +294,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   else
                     CircleAvatar(
                       radius: 48,
-                      backgroundColor: isDark ? AppTheme.primaryDark : AppTheme.mintColor,
+                      backgroundColor: isDark
+                          ? AppTheme.primaryDark
+                          : AppTheme.mintColor,
                       child: Text(
                         initials,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppTheme.accentLime : AppTheme.primaryDark,
+                          color: isDark
+                              ? AppTheme.accentLime
+                              : AppTheme.primaryDark,
                         ),
                       ),
                     ),
@@ -274,7 +329,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 12),
               Text(
                 profile?.fullName ?? 'Student',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
@@ -297,19 +355,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // Statistics Sub-Row
               Container(
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppTheme.bgDark
-                      : AppTheme.mintColor,
+                  color: isDark ? AppTheme.bgDark : AppTheme.mintColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Row(
                   children: [
-                    Expanded(child: _buildProfileStat('Points', '${profile?.totalPoints ?? 0}')),
-                    Container(width: 1, height: 24, color: AppTheme.borderLight.withOpacity(0.5)),
-                    Expanded(child: _buildProfileStat('Bottles', '${profile?.totalBottles ?? 0}')),
-                    Container(width: 1, height: 24, color: AppTheme.borderLight.withOpacity(0.5)),
-                    Expanded(child: _buildProfileStat('Rank', myRank > 0 ? '#$myRank' : '—')),
+                    Expanded(
+                      child: _buildProfileStat(
+                        'Points',
+                        '${profile?.totalPoints ?? 0}',
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 24,
+                      color: AppTheme.borderLight.withValues(alpha: 0.5),
+                    ),
+                    Expanded(
+                      child: _buildProfileStat(
+                        'Bottles',
+                        '${profile?.totalBottles ?? 0}',
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 24,
+                      color: AppTheme.borderLight.withValues(alpha: 0.5),
+                    ),
+                    Expanded(
+                      child: _buildProfileStat(
+                        'Rank',
+                        myRank > 0 ? '#$myRank' : '—',
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -352,7 +431,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: _achievements.map((ach) {
             final type = ach['type'];
             final threshold = ach['threshold'] as int;
-            final userVal = type == 'streak' ? (profile?.streakDays ?? 0) : (profile?.totalBottles ?? 0);
+            final userVal = type == 'streak'
+                ? (profile?.streakDays ?? 0)
+                : (profile?.totalBottles ?? 0);
             final unlocked = userVal >= threshold;
 
             return Opacity(
@@ -421,11 +502,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ElevatedButton.icon(
           onPressed: _signOut,
           style: ElevatedButton.styleFrom(
-            backgroundColor: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
+            backgroundColor: isDark
+                ? AppTheme.cardBgDark
+                : AppTheme.cardBgLight,
             foregroundColor: AppTheme.destructiveColor,
             elevation: 0,
             minimumSize: const Size(double.infinity, 50),
-            side: BorderSide(color: isDark ? AppTheme.borderDark : AppTheme.borderLight),
+            side: BorderSide(
+              color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -476,7 +561,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   height: 100,
                   width: 100,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentLime.withOpacity(0.12),
+                    color: AppTheme.accentLime.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -485,21 +570,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.12),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(100),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(LucideIcons.trophy, color: AppTheme.primaryColor, size: 14),
+                        const Icon(
+                          LucideIcons.trophy,
+                          color: AppTheme.primaryColor,
+                          size: 14,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Eco Hero of the Week',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppTheme.accentLime : AppTheme.primaryDark,
+                            color: isDark
+                                ? AppTheme.accentLime
+                                : AppTheme.primaryDark,
                           ),
                         ),
                       ],
@@ -509,18 +603,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (podium.isNotEmpty) ...[
                     CircleAvatar(
                       radius: 36,
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
+                      backgroundColor: AppTheme.primaryColor.withValues(
+                        alpha: 0.15,
+                      ),
                       child: const Text('🌱', style: TextStyle(fontSize: 28)),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       podium[0]['full_name'] ?? '—',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Top Recycler · ${podium[0]['total_points']} pts',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                   ],
                 ],
@@ -556,7 +658,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       'Weekly Ranking',
-                      style: theme.textTheme.titleMedium?.copyWith(fontSize: 13),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontSize: 13,
+                      ),
                     ),
                     const Text(
                       'Updates every 7 days',
@@ -581,28 +685,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: rest.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final rankUser = rest[index];
                     final rankNum = index + 4;
                     final isMe = widget.profile?.id == rankUser['id'];
 
-                    final initials = rankUser['full_name'] != null && rankUser['full_name']!.toString().trim().isNotEmpty
+                    final initials =
+                        rankUser['full_name'] != null &&
+                            rankUser['full_name']!.toString().trim().isNotEmpty
                         ? rankUser['full_name']
-                            .toString()
-                            .split(' ')
-                            .where((word) => word.isNotEmpty)
-                            .map((word) => word[0])
-                            .take(2)
-                            .join()
-                            .toUpperCase()
+                              .toString()
+                              .split(' ')
+                              .where((word) => word.isNotEmpty)
+                              .map((word) => word[0])
+                              .take(2)
+                              .join()
+                              .toUpperCase()
                         : '?';
 
                     return Container(
                       color: isMe
-                          ? (isDark ? AppTheme.primaryDark.withOpacity(0.2) : AppTheme.mintColor.withOpacity(0.6))
+                          ? (isDark
+                                ? AppTheme.primaryDark.withValues(alpha: 0.2)
+                                : AppTheme.mintColor.withValues(alpha: 0.6))
                           : Colors.transparent,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 12.0,
+                      ),
                       child: Row(
                         children: [
                           SizedBox(
@@ -619,13 +731,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(width: 8),
                           CircleAvatar(
                             radius: 18,
-                            backgroundColor: isDark ? const Color(0xFF131D18) : AppTheme.borderLight,
+                            backgroundColor: isDark
+                                ? const Color(0xFF131D18)
+                                : AppTheme.borderLight,
                             child: Text(
                               initials,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? AppTheme.accentLime : AppTheme.primaryDark,
+                                color: isDark
+                                    ? AppTheme.accentLime
+                                    : AppTheme.primaryDark,
                               ),
                             ),
                           ),
@@ -641,7 +757,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           Row(
                             children: [
-                              const Icon(LucideIcons.flame, color: Colors.orange, size: 14),
+                              const Icon(
+                                LucideIcons.flame,
+                                color: Colors.orange,
+                                size: 14,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '${rankUser['total_points']}',
@@ -668,13 +788,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildPodiumLayout(List<Map<String, dynamic>> podium, bool isDark) {
     // Map order to: [2nd, 1st, 3rd] -> podium array index order: [1, 0, 2]
     final order = [1, 0, 2];
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: order.map((podIndex) {
         if (podIndex >= podium.length) return const Expanded(child: SizedBox());
-        
+
         final user = podium[podIndex];
         final isFirst = podIndex == 0;
         final isSecond = podIndex == 1;
@@ -682,7 +802,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         double blockHeight = 0;
         String medal = '';
         double avatarRadius = 0;
-        
+
         if (isFirst) {
           blockHeight = 90;
           medal = '🥇';
@@ -697,15 +817,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           avatarRadius = 20;
         }
 
-        final initials = user['full_name'] != null && user['full_name']!.toString().trim().isNotEmpty
+        final initials =
+            user['full_name'] != null &&
+                user['full_name']!.toString().trim().isNotEmpty
             ? user['full_name']
-                .toString()
-                .split(' ')
-                .where((word) => word.isNotEmpty)
-                .map((word) => word[0])
-                .take(2)
-                .join()
-                .toUpperCase()
+                  .toString()
+                  .split(' ')
+                  .where((word) => word.isNotEmpty)
+                  .map((word) => word[0])
+                  .take(2)
+                  .join()
+                  .toUpperCase()
             : '?';
 
         return Expanded(
@@ -714,7 +836,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               CircleAvatar(
                 radius: avatarRadius,
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
                 child: Text(
                   initials,
                   style: TextStyle(
@@ -727,7 +849,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 6),
               Text(
                 user['full_name']?.toString().split(' ').first ?? '—',
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -743,7 +868,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
                   color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                   border: Border.all(
                     color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
                   ),
@@ -756,7 +883,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 2),
                     Text(
                       isFirst ? '#1' : (isSecond ? '#2' : '#3'),
-                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppTheme.textMuted),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -773,7 +904,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           value,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.primaryDark),
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryDark,
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -790,7 +925,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         height: 36,
         width: 36,
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.12),
+          color: AppTheme.primaryColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: AppTheme.primaryColor, size: 18),
@@ -799,7 +934,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         label,
         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
-      trailing: const Icon(LucideIcons.chevronRight, size: 14, color: AppTheme.textMuted),
+      trailing: const Icon(
+        LucideIcons.chevronRight,
+        size: 14,
+        color: AppTheme.textMuted,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       onTap: onTap,
     );

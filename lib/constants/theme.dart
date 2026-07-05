@@ -37,12 +37,12 @@ class AppTheme {
   // Shadows
   static final List<BoxShadow> shadowCard = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.03),
+      color: Colors.black.withValues(alpha: 0.03),
       blurRadius: 3,
       offset: const Offset(0, 1),
     ),
@@ -50,7 +50,7 @@ class AppTheme {
 
   static final List<BoxShadow> shadowFab = [
     BoxShadow(
-      color: primaryColor.withOpacity(0.35),
+      color: primaryColor.withValues(alpha: 0.35),
       blurRadius: 20,
       offset: const Offset(0, 10),
     ),
@@ -102,7 +102,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: borderLight.withOpacity(0.4),
+        fillColor: borderLight.withValues(alpha: 0.4),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

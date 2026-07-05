@@ -38,14 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.profile == null) return;
     setState(() => _loadingActivities = true);
     try {
-      final data = await _supabaseService.getRecentActivities(widget.profile!.id, limit: 3);
+      final data = await _supabaseService.getRecentActivities(
+        widget.profile!.id,
+        limit: 3,
+      );
       if (mounted) {
         setState(() {
           _recentSessions = data;
         });
       }
     } catch (e) {
-      print('Error loading recent: $e');
+      debugPrint('Error loading recent: $e');
     } finally {
       if (mounted) setState(() => _loadingActivities = false);
     }
@@ -70,17 +73,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final percent = (progress * 100).round();
     final pointsNeeded = (nextRewardAt - points).clamp(0, nextRewardAt);
 
-    final initials = profile?.fullName != null && profile!.fullName!.trim().isNotEmpty
+    final initials =
+        profile?.fullName != null && profile!.fullName!.trim().isNotEmpty
         ? profile.fullName!
-            .split(' ')
-            .where((word) => word.isNotEmpty)
-            .map((word) => word[0])
-            .take(2)
-            .join()
-            .toUpperCase()
+              .split(' ')
+              .where((word) => word.isNotEmpty)
+              .map((word) => word[0])
+              .take(2)
+              .join()
+              .toUpperCase()
         : 'ME';
 
-    final firstName = profile?.fullName != null && profile!.fullName!.trim().isNotEmpty
+    final firstName =
+        profile?.fullName != null && profile!.fullName!.trim().isNotEmpty
         ? profile.fullName!.split(' ').first
         : 'there';
 
@@ -101,13 +106,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         '${_getGreeting()},',
-                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Hi, $firstName! 👋',
                         style: theme.textTheme.titleLarge?.copyWith(
-                          color: isDark ? AppTheme.textLight : AppTheme.primaryDark,
+                          color: isDark
+                              ? AppTheme.textLight
+                              : AppTheme.primaryDark,
                           fontSize: 24,
                         ),
                       ),
@@ -120,7 +129,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: isDark ? AppTheme.cardBgDark : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                        color: isDark
+                            ? AppTheme.borderDark
+                            : AppTheme.borderLight,
                       ),
                       boxShadow: AppTheme.shadowCard,
                     ),
@@ -129,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         initials,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppTheme.accentLime : AppTheme.primaryDark,
+                          color: isDark
+                              ? AppTheme.accentLime
+                              : AppTheme.primaryDark,
                         ),
                       ),
                     ),
@@ -155,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 120,
                         width: 120,
                         decoration: BoxDecoration(
-                          color: AppTheme.accentLime.withOpacity(0.12),
+                          color: AppTheme.accentLime.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -168,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             letterSpacing: 1.1,
                           ),
                         ),
@@ -214,7 +227,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(100),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: const Text(
                                 'Redeem',
                                 style: TextStyle(
@@ -245,13 +261,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildStatCard(
                     title: 'Bottles Recycled',
                     value: '${profile?.totalBottles ?? 0}',
-                    icon: const Icon(LucideIcons.recycle, color: AppTheme.primaryColor),
+                    icon: const Icon(
+                      LucideIcons.recycle,
+                      color: AppTheme.primaryColor,
+                    ),
                     isDark: isDark,
                   ),
                   _buildStatCard(
                     title: 'CO₂ Saved',
-                    value: '${(profile?.co2SavedKg ?? 0.0).toStringAsFixed(1)} kg',
-                    icon: const Icon(LucideIcons.leaf, color: AppTheme.primaryColor),
+                    value:
+                        '${(profile?.co2SavedKg ?? 0.0).toStringAsFixed(1)} kg',
+                    icon: const Icon(
+                      LucideIcons.leaf,
+                      color: AppTheme.primaryColor,
+                    ),
                     isDark: isDark,
                   ),
                   _buildStatCard(
@@ -293,9 +316,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             value: progress,
                             strokeWidth: 6,
                             backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : AppTheme.primaryColor.withOpacity(0.12),
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : AppTheme.primaryColor.withValues(alpha: 0.12),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppTheme.primaryColor,
+                            ),
                           ),
                         ),
                         Text(
@@ -303,7 +328,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppTheme.textLight : AppTheme.primaryDark,
+                            color: isDark
+                                ? AppTheme.textLight
+                                : AppTheme.primaryDark,
                           ),
                         ),
                       ],
@@ -313,10 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Next Reward',
-                            style: theme.textTheme.bodySmall,
-                          ),
+                          Text('Next Reward', style: theme.textTheme.bodySmall),
                           const Text(
                             '\$5 Coffee Voucher',
                             style: TextStyle(
@@ -332,7 +356,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    const Icon(LucideIcons.chevronRight, color: AppTheme.textMuted),
+                    const Icon(
+                      LucideIcons.chevronRight,
+                      color: AppTheme.textMuted,
+                    ),
                   ],
                 ),
               ),
@@ -358,7 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const ScanScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const ScanScreen(),
+                            ),
                           );
                         },
                       ),
@@ -367,7 +396,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         label: 'Rewards',
                         color: Colors.pink,
                         isDark: isDark,
-                        onTap: () {}, // Let the shell handle switching, or notify
+                        onTap:
+                            () {}, // Let the shell handle switching, or notify
                       ),
                       _buildQuickAction(
                         icon: LucideIcons.barChart3,
@@ -398,7 +428,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         'Recent Activity',
-                        style: theme.textTheme.titleMedium?.copyWith(fontSize: 14),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: 14,
+                        ),
                       ),
                       TextButton(
                         onPressed: () {},
@@ -421,10 +453,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 10),
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
+                      color: isDark
+                          ? AppTheme.cardBgDark
+                          : AppTheme.cardBgLight,
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                        color: isDark
+                            ? AppTheme.borderDark
+                            : AppTheme.borderLight,
                       ),
                       boxShadow: AppTheme.shadowCard,
                     ),
@@ -436,86 +472,96 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           )
                         : _recentSessions.isEmpty
-                            ? const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
-                                child: Column(
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 32.0,
+                              horizontal: 16.0,
+                            ),
+                            child: Column(
+                              children: [
+                                Text('🍶', style: TextStyle(fontSize: 32)),
+                                SizedBox(height: 8),
+                                Text(
+                                  'No recycles yet. Tap Scan to start!',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _recentSessions.length,
+                            separatorBuilder: (context, index) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final session = _recentSessions[index];
+                              final dateStr = DateFormat(
+                                'MMM d, h:mm a',
+                              ).format(session.createdAt);
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 12.0,
+                                ),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      '🍶',
-                                      style: TextStyle(fontSize: 32),
+                                    Container(
+                                      height: 40,
+                                      width: 40,
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? AppTheme.primaryDark.withValues(
+                                                alpha: 0.4,
+                                              )
+                                            : AppTheme.mintColor,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        LucideIcons.recycle,
+                                        color: AppTheme.primaryColor,
+                                        size: 20,
+                                      ),
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${session.bottleCount} bottle${session.bottleCount > 1 ? "s" : ""} recycled',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${session.location ?? "UiTM Campus"} • $dateStr',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(fontSize: 11),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                     Text(
-                                      'No recycles yet. Tap Scan to start!',
-                                      style: TextStyle(
+                                      '+${session.pointsEarned}',
+                                      style: const TextStyle(
                                         fontSize: 13,
-                                        color: AppTheme.textMuted,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryColor,
                                       ),
                                     ),
                                   ],
                                 ),
-                              )
-                            : ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _recentSessions.length,
-                                separatorBuilder: (context, index) => const Divider(height: 1),
-                                itemBuilder: (context, index) {
-                                  final session = _recentSessions[index];
-                                  final dateStr = DateFormat('MMM d, h:mm a').format(session.createdAt);
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          height: 40,
-                                          width: 40,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? AppTheme.primaryDark.withOpacity(0.4)
-                                                : AppTheme.mintColor,
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: const Icon(
-                                            LucideIcons.recycle,
-                                            color: AppTheme.primaryColor,
-                                            size: 20,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                '${session.bottleCount} bottle${session.bottleCount > 1 ? "s" : ""} recycled',
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                '${session.location ?? "UiTM Campus"} • $dateStr',
-                                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Text(
-                                          '+${session.pointsEarned}',
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.primaryColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -526,22 +572,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color: isDark
                       ? const Color(0xFF1F2F26)
-                      : AppTheme.accentLime.withOpacity(0.24),
+                      : AppTheme.accentLime.withValues(alpha: 0.24),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
                     color: isDark
                         ? const Color(0x3322C55E)
-                        : AppTheme.accentLime.withOpacity(0.5),
+                        : AppTheme.accentLime.withValues(alpha: 0.5),
                   ),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '💡',
-                      style: TextStyle(fontSize: 24),
-                    ),
+                    Text('💡', style: TextStyle(fontSize: 24)),
                     SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -603,17 +646,18 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 11, color: AppTheme.textMuted, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textMuted,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               icon,
             ],
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -647,10 +691,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 6),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
             ),
           ],
         ),

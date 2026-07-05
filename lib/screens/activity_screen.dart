@@ -64,14 +64,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
     setState(() => _isLoading = true);
     try {
       final since = _calculateSinceDate();
-      final data = await _supabaseService.getActivitiesInTimeframe(widget.profile!.id, since);
+      final data = await _supabaseService.getActivitiesInTimeframe(
+        widget.profile!.id,
+        since,
+      );
       if (mounted) {
         setState(() {
           _sessions = data;
         });
       }
     } catch (e) {
-      print('Error loading activities: $e');
+      debugPrint('Error loading activities: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -98,8 +101,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }).toList();
 
     // Aggregates
-    final totalBottles = filteredSessions.fold<int>(0, (sum, item) => sum + item.bottleCount);
-    final totalPoints = filteredSessions.fold<int>(0, (sum, item) => sum + item.pointsEarned);
+    final totalBottles = filteredSessions.fold<int>(
+      0,
+      (sum, item) => sum + item.bottleCount,
+    );
+    final totalPoints = filteredSessions.fold<int>(
+      0,
+      (sum, item) => sum + item.pointsEarned,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -108,7 +117,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
           children: [
             // Top Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -126,7 +138,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       color: isDark ? AppTheme.cardBgDark : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                        color: isDark
+                            ? AppTheme.borderDark
+                            : AppTheme.borderLight,
                       ),
                       boxShadow: AppTheme.shadowCard,
                     ),
@@ -161,7 +175,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -179,7 +193,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           Container(
                             width: 1,
                             height: 50,
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                           ),
                           const SizedBox(width: 24),
                           Expanded(
@@ -191,7 +205,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -214,7 +228,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     // Filter Tabs
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark ? AppTheme.cardBgDark : AppTheme.borderLight.withOpacity(0.5),
+                        color: isDark
+                            ? AppTheme.cardBgDark
+                            : AppTheme.borderLight.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       padding: const EdgeInsets.all(4),
@@ -232,12 +248,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: isActive
-                                      ? (isDark ? AppTheme.bgDark : Colors.white)
+                                      ? (isDark
+                                            ? AppTheme.bgDark
+                                            : Colors.white)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(100),
-                                  boxShadow: isActive ? AppTheme.shadowCard : null,
+                                  boxShadow: isActive
+                                      ? AppTheme.shadowCard
+                                      : null,
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 child: Center(
                                   child: Text(
                                     f,
@@ -245,7 +267,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: isActive
-                                          ? (isDark ? AppTheme.accentLime : AppTheme.primaryDark)
+                                          ? (isDark
+                                                ? AppTheme.accentLime
+                                                : AppTheme.primaryDark)
                                           : AppTheme.textMuted,
                                     ),
                                   ),
@@ -277,117 +301,132 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             ),
                           )
                         : filteredSessions.isEmpty
-                            ? Container(
+                        ? Container(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppTheme.cardBgDark
+                                  : AppTheme.cardBgLight,
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppTheme.borderDark
+                                    : AppTheme.borderLight,
+                              ),
+                              boxShadow: AppTheme.shadowCard,
+                            ),
+                            padding: const EdgeInsets.all(40),
+                            child: const Column(
+                              children: [
+                                Text('📭', style: TextStyle(fontSize: 40)),
+                                SizedBox(height: 12),
+                                Text(
+                                  'No activity in this period yet.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textMuted,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filteredSessions.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final session = filteredSessions[index];
+                              final dateStr = DateFormat(
+                                'MMM d, yyyy h:mm a',
+                              ).format(session.createdAt);
+                              return Container(
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
+                                  color: isDark
+                                      ? AppTheme.cardBgDark
+                                      : AppTheme.cardBgLight,
                                   borderRadius: BorderRadius.circular(28),
                                   border: Border.all(
-                                    color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                                    color: isDark
+                                        ? AppTheme.borderDark
+                                        : AppTheme.borderLight,
                                   ),
                                   boxShadow: AppTheme.shadowCard,
                                 ),
-                                padding: const EdgeInsets.all(40),
-                                child: const Column(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      '📭',
-                                      style: TextStyle(fontSize: 40),
-                                    ),
-                                    SizedBox(height: 12),
-                                    Text(
-                                      'No activity in this period yet.',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.textMuted,
-                                        fontWeight: FontWeight.bold,
+                                    Container(
+                                      height: 48,
+                                      width: 48,
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? AppTheme.primaryDark.withValues(
+                                                alpha: 0.4,
+                                              )
+                                            : AppTheme.mintColor,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: const Icon(
+                                        LucideIcons.recycle,
+                                        color: AppTheme.primaryColor,
+                                        size: 24,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              )
-                            : ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: filteredSessions.length,
-                                separatorBuilder: (context, index) => const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final session = filteredSessions[index];
-                                  final dateStr = DateFormat('MMM d, yyyy h:mm a').format(session.createdAt);
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: isDark ? AppTheme.cardBgDark : AppTheme.cardBgLight,
-                                      borderRadius: BorderRadius.circular(28),
-                                      border: Border.all(
-                                        color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${session.bottleCount} bottle${session.bottleCount > 1 ? "s" : ""}',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${session.location ?? "UiTM Campus"} • Bin ${session.binId}',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(fontSize: 11),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            dateStr,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(fontSize: 10),
+                                          ),
+                                        ],
                                       ),
-                                      boxShadow: AppTheme.shadowCard,
                                     ),
-                                    padding: const EdgeInsets.all(16),
-                                    child: Row(
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
-                                        Container(
-                                          height: 48,
-                                          width: 48,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? AppTheme.primaryDark.withOpacity(0.4)
-                                                : AppTheme.mintColor,
-                                            borderRadius: BorderRadius.circular(16),
-                                          ),
-                                          child: const Icon(
-                                            LucideIcons.recycle,
+                                        Text(
+                                          '+${session.pointsEarned}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
                                             color: AppTheme.primaryColor,
-                                            size: 24,
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                '${session.bottleCount} bottle${session.bottleCount > 1 ? "s" : ""}',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                '${session.location ?? "UiTM Campus"} • Bin ${session.binId}',
-                                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                dateStr,
-                                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              '+${session.pointsEarned}',
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppTheme.primaryColor,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              '${session.co2SavedKg}kg CO₂',
-                                              style: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
-                                            ),
-                                          ],
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${session.co2SavedKg}kg CO₂',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(fontSize: 10),
                                         ),
                                       ],
                                     ),
-                                  );
-                                },
-                              ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                   ],
                 ),
               ),
