@@ -36,7 +36,6 @@ class SupabaseService {
   // AUTHENTICATION METHODS
   // ============================================================================
 
-  // Sign In
   Future<AuthResponse> signIn({
     required String email,
     required String password,
@@ -51,7 +50,6 @@ class SupabaseService {
     }
   }
 
-  // Sign Up
   Future<AuthResponse> signUp({
     required String email,
     required String password,
@@ -69,12 +67,10 @@ class SupabaseService {
     }
   }
 
-  // Sign Out
   Future<void> signOut() async {
     await client.auth.signOut();
   }
 
-  // Sign In with Google OAuth
   Future<void> signInWithGoogle() async {
     try {
       await client.auth.signInWithOAuth(
@@ -87,7 +83,6 @@ class SupabaseService {
     }
   }
 
-  // Resend confirmation email
   Future<void> resendConfirmationEmail(String email) async {
     try {
       await client.auth.resend(type: OtpType.signup, email: email);
@@ -244,6 +239,7 @@ class SupabaseService {
         await client.from('user_points').insert({
           'user_id': userId,
           'total_points': 0,
+          'bottles_recycled': 0,
         });
       }
     } catch (e) {
@@ -264,7 +260,6 @@ class SupabaseService {
         return await _populateStatsForProfile(response);
       }
 
-      // Profile does not exist, let's create a default profile row!
       final user = client.auth.currentUser;
       if (user != null) {
         final email = user.email ?? '';
@@ -290,7 +285,6 @@ class SupabaseService {
         await client.from('profiles').insert(newProfileMap);
         await _ensureUserPointsRow(userId);
 
-        // Retrieve again
         final secondResponse = await client
             .from('profiles')
             .select()
@@ -308,7 +302,6 @@ class SupabaseService {
   final StreamController<Profile?> _profileRefreshController =
       StreamController<Profile?>.broadcast();
 
-  // Realtime Profile updates stream combined with manual refresh
   Stream<Profile?> streamProfile(String userId) {
     final controller = StreamController<Profile?>.broadcast();
 
@@ -322,7 +315,6 @@ class SupabaseService {
     Future<void> triggerUpdate() async {
       final seq = ++currentSequence;
       try {
-        // Wait a short delay to allow database triggers to complete and group rapid events
         await Future.delayed(const Duration(milliseconds: 200));
         if (seq != currentSequence) return;
 
@@ -356,7 +348,6 @@ class SupabaseService {
         .listen((_) => triggerUpdate(), onError: controller.addError);
 
     subRefresh = _profileRefreshController.stream.listen((profile) {
-      // Increment sequence to invalidate any running triggerUpdates
       currentSequence++;
       controller.add(profile);
     }, onError: controller.addError);
@@ -368,13 +359,11 @@ class SupabaseService {
       subRefresh?.cancel();
     };
 
-    // Trigger initial fetch
     triggerUpdate();
 
     return controller.stream;
   }
 
-  // Force a manual REST fetch and emit it instantly
   Future<Profile?> refreshProfile(String userId) async {
     try {
       final profile = await getProfile(userId);
@@ -388,7 +377,6 @@ class SupabaseService {
     }
   }
 
-  // Update Profile Name and Avatar
   Future<void> updateProfileNameAndAvatar(
     String userId,
     String newName,
@@ -412,14 +400,32 @@ class SupabaseService {
   // BOTTLE DETECTION METHODS (IoT Integration)
   // ============================================================================
 
+  /// Get current user's total points
+  Future<int> getCurrentUserTotalPoints(String userId) async {
+    try {
+      final response = await client
+          .from('user_points')
+          .select('total_points')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response != null) {
+        return (response['total_points'] as int?) ?? 0;
+      }
+      return 0;
+    } catch (e) {
+      debugPrint('Error fetching current user points: $e');
+      return 0;
+    }
+  }
+
   /// Watch bottle detections in real-time (for current scan session)
   /// Shows count of bottles detected since scan started
   Stream<List<Map<String, dynamic>>> watchBottleDetections(
     String userId,
     String binId, {
-    int sinceSeconds = 300, // Last 5 minutes
+    int sinceSeconds = 300,
   }) {
-    // Force UTC comparison
     final since = DateTime.now().toUtc().subtract(
       Duration(seconds: sinceSeconds),
     );
@@ -435,14 +441,23 @@ class SupabaseService {
             final createdAtStr = d['created_at'] as String?;
             if (createdAtStr == null) return false;
 
-            final createdAt = DateTime.parse(createdAtStr);
+            // Treat database timestamps as UTC if they don't have timezone offset suffix
+            final parsedStr =
+                (createdAtStr.endsWith('Z') || createdAtStr.contains('+'))
+                ? createdAtStr
+                : '${createdAtStr}Z';
+            final createdAt = DateTime.parse(parsedStr);
+
+            debugPrint(
+              '[Realtime Detections] comparing createdAt: $createdAt (UTC) with since: $since (UTC). Match: ${binMatch && isValid && createdAt.isAfter(since)}',
+            );
+
             return binMatch && isValid && createdAt.isAfter(since);
           }).toList(),
         );
   }
 
   /// Get bottle count for current session in real-time
-  /// Useful for display: "3 bottles detected"
   Stream<int> watchBottleCountSince(
     String userId,
     String binId,
@@ -461,7 +476,17 @@ class SupabaseService {
             final createdAtStr = d['created_at'] as String?;
             if (createdAtStr == null) return false;
 
-            final createdAt = DateTime.parse(createdAtStr);
+            // Treat database timestamps as UTC if they don't have timezone offset suffix
+            final parsedStr =
+                (createdAtStr.endsWith('Z') || createdAtStr.contains('+'))
+                ? createdAtStr
+                : '${createdAtStr}Z';
+            final createdAt = DateTime.parse(parsedStr);
+
+            debugPrint(
+              '[Realtime Count] d[id]=${d['id']} | binMatch: $binMatch | isValid: $isValid | createdAt: $createdAt | since: $since | isAfter: ${createdAt.isAfter(since)}',
+            );
+
             return binMatch && isValid && createdAt.isAfter(since);
           }).length,
         );
@@ -487,23 +512,35 @@ class SupabaseService {
   }
 
   /// Log a bottle detection (called by ESP32 or Flutter when in test mode)
-  /// This inserts a row into bottle_detections table
+  /// Includes snapshot of user's total points at time of detection
   Future<void> logBottleDetection({
     required String userId,
     required String binId,
     required int weightGrams,
     int? ultrasonicLevel,
+    int pointsAwarded = 0,
   }) async {
     try {
+      // Get user's current total points (snapshot before detection)
+      final currentTotalPoints = await getCurrentUserTotalPoints(userId);
+
+      // Calculate total after this detection (points will be awarded by trigger)
+      final totalAfter = currentTotalPoints + pointsAwarded;
+
       await client.from('bottle_detections').insert({
         'user_id': userId,
         'bin_id': binId,
         'weight_grams': weightGrams,
         'ultrasonic_level': ultrasonicLevel ?? 0,
         'ir_triggered': true,
-        'detection_timestamp': DateTime.now().millisecondsSinceEpoch,
         'status': 'logged',
+        'total_points_after_detection': totalAfter,
+        'points_awarded': pointsAwarded,
       });
+
+      debugPrint(
+        '[Bottle Detection] Weight: ${weightGrams}g | Points: +$pointsAwarded | Total: $totalAfter',
+      );
     } catch (e) {
       debugPrint('Error logging bottle detection: $e');
       rethrow;
@@ -514,7 +551,6 @@ class SupabaseService {
   // BIN STATUS METHODS
   // ============================================================================
 
-  /// Watch bin status in real-time (fill level, last detection, etc)
   Stream<Map<String, dynamic>?> watchBinStatus(String binId) {
     return client
         .from('bin_status')
@@ -523,7 +559,6 @@ class SupabaseService {
         .map((maps) => maps.isNotEmpty ? maps.first : null);
   }
 
-  /// Get current bin status
   Future<Map<String, dynamic>?> getBinStatus(String binId) async {
     try {
       final response = await client
@@ -582,7 +617,6 @@ class SupabaseService {
     }
   }
 
-  /// Stream scan sessions in real-time (watch for new sessions)
   Stream<List<ScanSession>> streamScanSessions(String userId) {
     return client
         .from('scan_sessions')
@@ -595,9 +629,6 @@ class SupabaseService {
         );
   }
 
-  /// Insert scan session (Simulates the end of the IoT process)
-  /// This should be called AFTER all bottles have been detected
-  /// The trigger will automatically update user's total_points and total_bottles
   Future<void> insertScanSession({
     required String userId,
     required String binId,
@@ -634,7 +665,6 @@ class SupabaseService {
     required String binId,
   }) async {
     try {
-      // Close any existing active session for this user/bin
       await client
           .from('bin_sessions')
           .update({
@@ -645,7 +675,6 @@ class SupabaseService {
           .eq('bin_id', binId)
           .eq('is_active', true);
 
-      // Create new active session
       await client.from('bin_sessions').insert({
         'user_id': userId,
         'bin_id': binId,
@@ -740,7 +769,6 @@ class SupabaseService {
     }
   }
 
-  /// Stream rewards in real-time (for live updates)
   Stream<List<Reward>> streamRewards() {
     return client
         .from('rewards')
@@ -788,7 +816,6 @@ class SupabaseService {
     }
   }
 
-  /// Stream leaderboard in real-time (top 20 users by points)
   Stream<List<Map<String, dynamic>>> streamLeaderboard({int limit = 20}) {
     return client
         .from('user_points')
@@ -842,8 +869,6 @@ class SupabaseService {
     return 'RET-$code';
   }
 
-  /// Redeem a reward (deducts points from user)
-  /// The trigger will automatically deduct points from user's total_points
   Future<void> redeemReward({
     required String userId,
     required String rewardId,
@@ -856,7 +881,6 @@ class SupabaseService {
         'reward_id': rewardId,
         'points_spent': pointsSpent,
         'status': 'pending',
-        'code': code,
         'voucher_code': code,
       });
     } catch (e) {
@@ -865,7 +889,6 @@ class SupabaseService {
     }
   }
 
-  /// Fetch redemptions (Vouchers redeemed by user)
   Future<List<Map<String, dynamic>>> getUserVouchers(String userId) async {
     try {
       final response = await client
@@ -880,7 +903,6 @@ class SupabaseService {
     }
   }
 
-  /// Stream user redemptions in real-time
   Stream<List<Map<String, dynamic>>> streamUserVouchers(String userId) {
     return client
         .from('redemptions')
@@ -894,7 +916,6 @@ class SupabaseService {
         );
   }
 
-  /// Get user's pending redemptions (unclaimed vouchers)
   Future<List<Map<String, dynamic>>> getPendingVouchers(String userId) async {
     try {
       final response = await client
@@ -914,7 +935,6 @@ class SupabaseService {
   // DEBUG HELPER METHODS
   // ============================================================================
 
-  /// Test connection to Supabase
   Future<bool> testConnection() async {
     try {
       await client.from('bins').select().limit(1);
@@ -925,12 +945,12 @@ class SupabaseService {
     }
   }
 
-  // For testing WITHOUT ESP32
   Future<void> logTestBottleDetection(String userId, String binId) async {
     await logBottleDetection(
       userId: userId,
       binId: binId.isEmpty ? 'BIN_001' : binId,
       weightGrams: 450 + math.Random().nextInt(200),
+      pointsAwarded: 50, // 5 bottles worth of points
     );
   }
 }
