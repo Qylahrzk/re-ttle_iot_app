@@ -82,4 +82,42 @@ class Profile {
       'updated_at': updatedAt.toIso8601String(),
     };
   }
+
+  Profile copyWith({
+    String? id,
+    String? matricNumber,
+    String? fullName,
+    String? email,
+    String? faculty,
+    String? programme,
+    int? semester,
+    String? avatarUrl,
+    int? totalPoints,
+    int? totalBottles,
+    double? co2SavedKg,
+    int? plasticDivertedG,
+    int? streakDays,
+    String? lastScanDate,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Profile(
+      id: id ?? this.id,
+      matricNumber: matricNumber ?? this.matricNumber,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      faculty: faculty ?? this.faculty,
+      programme: programme ?? this.programme,
+      semester: semester ?? this.semester,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      totalPoints: totalPoints ?? this.totalPoints,
+      totalBottles: totalBottles ?? this.totalBottles,
+      co2SavedKg: co2SavedKg ?? this.co2SavedKg,
+      plasticDivertedG: plasticDivertedG ?? this.plasticDivertedG,
+      streakDays: streakDays ?? this.streakDays,
+      lastScanDate: lastScanDate ?? this.lastScanDate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:confetti/confetti.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../constants/theme.dart';
 import '../services/supabase_service.dart';
 
@@ -26,7 +27,11 @@ class _ScanScreenState extends State<ScanScreen> {
   final MobileScannerController _scannerController = MobileScannerController();
   late ConfettiController _confettiController;
   Timer? _simulatedProgressTimer;
-  bool _sessionInserted = false;
+
+  StreamSubscription<int>? _bottleCountSubscription;
+  int _currentBottleCount = 0;
+
+  bool _hasCameraPermission = false;
 
   @override
   void initState() {
@@ -34,78 +39,155 @@ class _ScanScreenState extends State<ScanScreen> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
+    _checkProfileAndPermissions();
+  }
+
+  Future<void> _checkProfileAndPermissions() async {
+    final profileOk = await _ensureProfileExists();
+    if (!profileOk) return;
+
+    await _requestCameraPermission();
+  }
+
+  Future<bool> _ensureProfileExists() async {
+    try {
+      final userId = _supabaseService.currentUser?.id;
+      if (userId == null) {
+        _showError('User not authenticated');
+        if (mounted) Navigator.pop(context);
+        return false;
+      }
+
+      final profile = await _supabaseService.getProfile(userId);
+      if (profile == null) {
+        _showError(
+          'Failed to create user profile. Please try logging in again.',
+        );
+        if (mounted) Navigator.pop(context);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('Error ensuring profile exists: $e');
+      _showError('Profile error: $e');
+      if (mounted) Navigator.pop(context);
+      return false;
+    }
+  }
+
+  Future<void> _requestCameraPermission() async {
+    final status = await Permission.camera.request();
+    if (!mounted) return;
+
+    if (status.isGranted || status.isLimited) {
+      setState(() {
+        _hasCameraPermission = true;
+      });
+    } else if (status.isDenied) {
+      _showError('Camera permission is required to scan QR codes');
+      Navigator.pop(context);
+    } else if (status.isPermanentlyDenied) {
+      _showError(
+        'Camera permission is permanently denied. Enable it in settings.',
+      );
+      await openAppSettings();
+    }
   }
 
   @override
   void dispose() {
     _simulatedProgressTimer?.cancel();
+    _bottleCountSubscription?.cancel();
     _manualCodeController.dispose();
     _scannerController.dispose();
     _confettiController.dispose();
     super.dispose();
   }
 
-  void _startIotProgression(String code) {
+  Future<void> _startIotProgression(String code) async {
     setState(() {
-      _binId = code.length > 24 ? code.substring(0, 24) : code;
+      _binId = code;
       _phase = ScanPhase.connecting;
-      _sessionInserted = false;
+      _currentBottleCount = 0;
     });
 
-    _scannerController.stop();
+    if (_hasCameraPermission) {
+      _scannerController.stop();
+    }
 
-    // Simulated IoT Progression
-    // Step 0: Connecting (1.5s) -> Step 2: Waiting for bottle insertion
-    _simulatedProgressTimer = Timer(const Duration(milliseconds: 1500), () {
+    try {
+      final sessionStart = DateTime.now().toUtc(); // anchor point
+      await _supabaseService.startBinSession(binId: code);
+
       if (!mounted) return;
+
       setState(() {
         _phase = ScanPhase.waiting;
       });
 
-      // Step 2: Waiting for bottle (2.2s) -> Step 3: Validating weight/IR sensors
-      _simulatedProgressTimer = Timer(const Duration(milliseconds: 2200), () {
-        if (!mounted) return;
-        setState(() {
-          _phase = ScanPhase.validating;
-        });
+      _listenBottleCounter(sessionStart);
+    } catch (e) {
+      _showError(e.toString());
+      _resetScan();
+    }
+  }
 
-        // Step 3: Validating (1.8s) -> Step 4: Success, upload to Supabase, launch confetti
-        _simulatedProgressTimer = Timer(
-          const Duration(milliseconds: 1800),
-          () async {
-            if (!mounted || _sessionInserted) return;
-            _sessionInserted = true;
+  void _listenBottleCounter(DateTime sessionStart) {
+    final userId = _supabaseService.currentUser!.id;
 
-            try {
-              await _supabaseService.insertScanSession(
-                userId: _supabaseService.currentUser!.id,
-                binId: _binId ?? 'BIN-UITM-01',
-                location: 'UiTM Shah Alam · Block A',
-                bottleCount: 1,
-                pointsEarned: 10,
-                co2Saved: 0.2,
-              );
+    _bottleCountSubscription?.cancel();
 
-              if (mounted) {
-                setState(() {
-                  _phase = ScanPhase.success;
-                });
-                _confettiController.play();
-              }
-            } catch (e) {
-              _sessionInserted = false;
-              _showError(e.toString());
-              _resetScan();
-            }
+    _bottleCountSubscription = _supabaseService
+        .watchBottleCountSince(userId, _binId!, sessionStart)
+        .listen(
+          (count) {
+            if (!mounted) return;
+
+            setState(() {
+              _currentBottleCount = count;
+            });
+          },
+          onError: (error) {
+            debugPrint('Error in bottle count stream: $error');
+            _showError('Stream error: $error');
           },
         );
-      });
+  }
+
+  Future<void> _finishAndClaim() async {
+    setState(() {
+      _phase = ScanPhase.validating;
     });
+
+    try {
+      await _supabaseService.endBinSession(
+        binId: _binId!,
+        bottleCount: _currentBottleCount,
+      );
+
+      final userId = _supabaseService.currentUser?.id;
+      if (userId != null) {
+        await _supabaseService.refreshProfile(userId);
+      }
+
+      if (!mounted) return;
+
+      _confettiController.play();
+
+      setState(() {
+        _phase = ScanPhase.success;
+      });
+    } catch (e) {
+      _showError(e.toString());
+      _resetScan();
+    }
   }
 
   void _submitManualCode() {
-    final code = _manualCodeController.text.trim();
-    if (code.isEmpty) return;
+    String code = _manualCodeController.text.trim();
+    if (code.isEmpty) {
+      code = 'BIN-UITM-01';
+    }
     _manualCodeController.clear();
     setState(() {
       _showManualInput = false;
@@ -115,12 +197,15 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void _resetScan() {
     _simulatedProgressTimer?.cancel();
+    _bottleCountSubscription?.cancel();
     setState(() {
       _phase = ScanPhase.scan;
       _binId = null;
-      _sessionInserted = false;
+      _currentBottleCount = 0;
     });
-    _scannerController.start();
+    if (_hasCameraPermission) {
+      _scannerController.start();
+    }
   }
 
   void _showError(String message) {
@@ -145,7 +230,7 @@ class _ScanScreenState extends State<ScanScreen> {
       body: Stack(
         children: [
           // 1. Camera Scanning View
-          if (_phase == ScanPhase.scan) ...[
+          if (_phase == ScanPhase.scan && _hasCameraPermission) ...[
             MobileScanner(
               controller: _scannerController,
               fit: BoxFit.cover,
@@ -275,7 +360,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (_phase == ScanPhase.scan)
+                  if (_phase == ScanPhase.scan && _hasCameraPermission)
                     GestureDetector(
                       onTap: () {
                         setState(() {
@@ -416,12 +501,7 @@ class _ScanScreenState extends State<ScanScreen> {
                           top: Radius.circular(28),
                         ),
                       ),
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        16,
-                        24,
-                        24 + MediaQuery.of(context).viewInsets.bottom,
-                      ),
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,10 +641,10 @@ class _ScanScreenState extends State<ScanScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Great job! You\'ve recycled a plastic bottle.',
+            Text(
+              'Great job! You\'ve recycled $_currentBottleCount plastic bottle${_currentBottleCount > 1 ? "s" : ""}.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.white70),
+              style: const TextStyle(fontSize: 13, color: Colors.white70),
             ),
             const SizedBox(height: 24),
             Container(
@@ -588,9 +668,9 @@ class _ScanScreenState extends State<ScanScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '+10 ★',
-                          style: TextStyle(
+                        Text(
+                          '+${_currentBottleCount * 10} ★',
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.primaryColor,
@@ -612,9 +692,9 @@ class _ScanScreenState extends State<ScanScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '0.2 kg',
-                          style: TextStyle(
+                        Text(
+                          '${(_currentBottleCount * 0.2).toStringAsFixed(1)} kg',
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.primaryDark,
@@ -694,7 +774,7 @@ class _ScanScreenState extends State<ScanScreen> {
       },
       {
         'key': ScanPhase.waiting,
-        'label': 'Insert your bottle',
+        'label': 'Waiting for ESP32...',
         'icon': LucideIcons.activity,
       },
       {
@@ -739,8 +819,11 @@ class _ScanScreenState extends State<ScanScreen> {
           const SizedBox(height: 24),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? AppTheme.cardBgDark : Colors.white,
               borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+              ),
               boxShadow: AppTheme.shadowCard,
             ),
             padding: const EdgeInsets.all(20),
@@ -827,28 +910,62 @@ class _ScanScreenState extends State<ScanScreen> {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              _supabaseService.logTestBottleDetection(
-                _supabaseService.currentUser!.id,
-                _binId ?? 'BIN-UITM-01',
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentLime,
-              foregroundColor: AppTheme.primaryDark,
-              minimumSize: const Size(double.infinity, 48),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          if (_phase == ScanPhase.waiting) ...[
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.cardBgDark : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Bottle Count',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      '$_currentBottleCount',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            icon: const Icon(LucideIcons.activity, size: 16),
-            label: const Text(
-              'TEST: Simulate Bottle',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _currentBottleCount == 0 ? null : _finishAndClaim,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                'Finish & Claim Points',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

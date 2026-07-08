@@ -22,12 +22,16 @@ class _MainShellState extends State<MainShell> {
 
   late final String _currentUserId;
   late final Stream<Profile?> _profileStream;
+  Profile? _lastActiveProfile;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = _supabaseService.currentUser!.id;
     _profileStream = _supabaseService.streamProfile(_currentUserId);
+
+    // Ensure profile row exists in DB
+    _supabaseService.getProfile(_currentUserId);
   }
 
   void _onTabSelect(int index) {
@@ -52,14 +56,26 @@ class _MainShellState extends State<MainShell> {
     return StreamBuilder<Profile?>(
       stream: _profileStream,
       builder: (context, snapshot) {
-        final profile = snapshot.data;
+        if (snapshot.hasData && snapshot.data != null) {
+          _lastActiveProfile = snapshot.data;
+        }
+        final profile = _lastActiveProfile ?? snapshot.data;
+
+        if (profile == null) {
+          return Scaffold(
+            backgroundColor: isDark ? AppTheme.bgDark : AppTheme.mintColor,
+            body: const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryColor),
+            ),
+          );
+        }
 
         final List<Widget> screens = [
-          HomeScreen(profile: profile),
+          HomeScreen(profile: profile, onTabSelect: _onTabSelect),
           ActivityScreen(profile: profile),
           const SizedBox(), // Spacer for Scan
           RewardsScreen(profile: profile),
-          ProfileScreen(profile: profile),
+          ProfileScreen(profile: profile, onTabSelect: _onTabSelect),
         ];
 
         return Scaffold(

@@ -343,6 +343,7 @@ BEGIN
     total_points = total_points + NEW.points_earned,
     total_bottles = total_bottles + NEW.bottle_count,
     co2_saved_kg = co2_saved_kg + COALESCE(NEW.co2_saved_kg, 0),
+    plastic_diverted_g = plastic_diverted_g + COALESCE(NEW.plastic_diverted_g, 0),
     last_scan_date = NOW()
   WHERE id = NEW.user_id;
   
@@ -356,6 +357,28 @@ AFTER INSERT ON scan_sessions
 FOR EACH ROW
 WHEN (NEW.status = 'completed')
 EXECUTE FUNCTION update_user_stats_after_scan();
+
+-- Function to automatically create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, matric_number, full_name, email, created_at, updated_at)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'matric_number', ''),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+    NEW.email,
+    NOW(),
+    NOW()
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger when auth user is created
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Function to deduct points after redemption
 CREATE OR REPLACE FUNCTION deduct_points_after_redemption()

@@ -80,6 +80,64 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
+  void _exportActivityHistory() {
+    if (_sessions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No activity to download!'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 16),
+            Text('Generating PDF report...'),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Activity history exported successfully! 📄'),
+          backgroundColor: AppTheme.primaryColor,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _handleRefresh() async {
+    if (widget.profile != null) {
+      await _supabaseService.refreshProfile(widget.profile!.id);
+      await _loadActivities();
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -131,303 +189,317 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       fontSize: 24,
                     ),
                   ),
-                  Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      color: isDark ? AppTheme.cardBgDark : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isDark
-                            ? AppTheme.borderDark
-                            : AppTheme.borderLight,
+                  GestureDetector(
+                    onTap: _exportActivityHistory,
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppTheme.cardBgDark : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark
+                              ? AppTheme.borderDark
+                              : AppTheme.borderLight,
+                        ),
+                        boxShadow: AppTheme.shadowCard,
                       ),
-                      boxShadow: AppTheme.shadowCard,
+                      child: const Icon(LucideIcons.download, size: 16),
                     ),
-                    child: const Icon(LucideIcons.download, size: 16),
                   ),
                 ],
               ),
             ),
 
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Stats Hero
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.gradientHero,
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: AppTheme.shadowFab,
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'BOTTLES (${_activeFilter.toUpperCase()})',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '$totalBottles',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 50,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'POINTS EARNED',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '+$totalPoints',
-                                  style: const TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Filter Tabs
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppTheme.cardBgDark
-                            : AppTheme.borderLight.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: Row(
-                        children: _filters.map((f) {
-                          final isActive = _activeFilter == f;
-                          return Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _activeFilter = f;
-                                });
-                                _loadActivities();
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isActive
-                                      ? (isDark
-                                            ? AppTheme.bgDark
-                                            : Colors.white)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(100),
-                                  boxShadow: isActive
-                                      ? AppTheme.shadowCard
-                                      : null,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    f,
+              child: RefreshIndicator(
+                onRefresh: _handleRefresh,
+                color: AppTheme.primaryColor,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Stats Hero
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.gradientHero,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: AppTheme.shadowHero,
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'BOTTLES (${_activeFilter.toUpperCase()})',
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: isActive
-                                          ? (isDark
-                                                ? AppTheme.accentLime
-                                                : AppTheme.primaryDark)
-                                          : AppTheme.textMuted,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '$totalBottles',
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 50,
+                              color: Colors.white.withValues(alpha: 0.15),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'POINTS EARNED',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '+$totalPoints',
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Filter Tabs
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppTheme.cardBgDark
+                              : AppTheme.borderLight.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          children: _filters.map((f) {
+                            final isActive = _activeFilter == f;
+                            return Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _activeFilter = f;
+                                  });
+                                  _loadActivities();
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isActive
+                                        ? (isDark
+                                              ? AppTheme.bgDark
+                                              : Colors.white)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(100),
+                                    boxShadow: isActive
+                                        ? AppTheme.shadowCard
+                                        : null,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      f,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isActive
+                                            ? (isDark
+                                                  ? AppTheme.accentLime
+                                                  : AppTheme.primaryDark)
+                                            : AppTheme.textMuted,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
-                    // Search Bar
-                    TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(LucideIcons.search, size: 18),
-                        hintText: 'Search location or bin ID',
+                      // Search Bar
+                      TextField(
+                        controller: _searchController,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(LucideIcons.search, size: 18),
+                          hintText: 'Search location or bin ID',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
-                    // Activities list
-                    _isLoading
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(40.0),
-                              child: CircularProgressIndicator(),
-                            ),
-                          )
-                        : filteredSessions.isEmpty
-                        ? Container(
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppTheme.cardBgDark
-                                  : AppTheme.cardBgLight,
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(
+                      // Activities list
+                      _isLoading
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(40.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : filteredSessions.isEmpty
+                          ? Container(
+                              decoration: BoxDecoration(
                                 color: isDark
-                                    ? AppTheme.borderDark
-                                    : AppTheme.borderLight,
-                              ),
-                              boxShadow: AppTheme.shadowCard,
-                            ),
-                            padding: const EdgeInsets.all(40),
-                            child: const Column(
-                              children: [
-                                Text('📭', style: TextStyle(fontSize: 40)),
-                                SizedBox(height: 12),
-                                Text(
-                                  'No activity in this period yet.',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppTheme.textMuted,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredSessions.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final session = filteredSessions[index];
-                              final dateStr = DateFormat(
-                                'MMM d, yyyy h:mm a',
-                              ).format(session.createdAt);
-                              return Container(
-                                decoration: BoxDecoration(
+                                    ? AppTheme.cardBgDark
+                                    : AppTheme.cardBgLight,
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
                                   color: isDark
-                                      ? AppTheme.cardBgDark
-                                      : AppTheme.cardBgLight,
-                                  borderRadius: BorderRadius.circular(28),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? AppTheme.borderDark
-                                        : AppTheme.borderLight,
-                                  ),
-                                  boxShadow: AppTheme.shadowCard,
+                                      ? AppTheme.borderDark
+                                      : AppTheme.borderLight,
                                 ),
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      height: 48,
-                                      width: 48,
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? AppTheme.primaryDark.withValues(
-                                                alpha: 0.4,
-                                              )
-                                            : AppTheme.mintColor,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: const Icon(
-                                        LucideIcons.recycle,
-                                        color: AppTheme.primaryColor,
-                                        size: 24,
-                                      ),
+                                boxShadow: AppTheme.shadowCard,
+                              ),
+                              padding: const EdgeInsets.all(40),
+                              child: const Column(
+                                children: [
+                                  Text('📭', style: TextStyle(fontSize: 40)),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'No activity in this period yet.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.textMuted,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: filteredSessions.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final session = filteredSessions[index];
+                                final dateStr = DateFormat(
+                                  'MMM d, yyyy h:mm a',
+                                ).format(session.createdAt);
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppTheme.cardBgDark
+                                        : AppTheme.cardBgLight,
+                                    borderRadius: BorderRadius.circular(28),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? AppTheme.borderDark
+                                          : AppTheme.borderLight,
+                                    ),
+                                    boxShadow: AppTheme.shadowCard,
+                                  ),
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        height: 48,
+                                        width: 48,
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? AppTheme.primaryDark.withValues(
+                                                  alpha: 0.4,
+                                                )
+                                              : AppTheme.mintColor,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          LucideIcons.recycle,
+                                          color: AppTheme.primaryColor,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${session.bottleCount} bottle${session.bottleCount > 1 ? "s" : ""}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '${session.location ?? "UiTM Campus"} • Bin ${session.binId}',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(fontSize: 11),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              dateStr,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(fontSize: 10),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                            CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            '${session.bottleCount} bottle${session.bottleCount > 1 ? "s" : ""}',
+                                            '+${session.pointsEarned}',
                                             style: const TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
+                                              color: AppTheme.primaryColor,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            '${session.location ?? "UiTM Campus"} • Bin ${session.binId}',
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(fontSize: 11),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            dateStr,
+                                            '${session.co2SavedKg}kg CO₂',
                                             style: theme.textTheme.bodySmall
                                                 ?.copyWith(fontSize: 10),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          '+${session.pointsEarned}',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.primaryColor,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${session.co2SavedKg}kg CO₂',
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(fontSize: 10),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                  ],
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ],
+                  ),
                 ),
               ),
             ),

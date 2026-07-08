@@ -27,13 +27,11 @@ class AppTheme {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-
   static const LinearGradient gradientHero = LinearGradient(
-    colors: [primaryColor, primaryDark],
+    colors: [Color(0xFF104632), Color(0xFF1C5A42)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-
   // Shadows
   static final List<BoxShadow> shadowCard = [
     BoxShadow(
@@ -53,6 +51,14 @@ class AppTheme {
       color: primaryColor.withValues(alpha: 0.35),
       blurRadius: 20,
       offset: const Offset(0, 10),
+    ),
+  ];
+
+  static final List<BoxShadow> shadowHero = [
+    BoxShadow(
+      color: const Color(0xFF0B3D2E).withValues(alpha: 0.18),
+      blurRadius: 16,
+      offset: const Offset(0, 8),
     ),
   ];
 

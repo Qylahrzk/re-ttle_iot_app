@@ -13,7 +13,7 @@ class Redemption {
     required this.rewardId,
     required this.pointsSpent,
     required this.code,
-    this.status = 'active',
+    this.status = 'pending',
     required this.createdAt,
   });
 
@@ -22,9 +22,9 @@ class Redemption {
       id: json['id'] as String,
       userId: json['user_id'] as String,
       rewardId: json['reward_id'] as String,
-      pointsSpent: json['points_spent'] as int,
-      code: json['code'] as String,
-      status: json['status'] as String? ?? 'active',
+      pointsSpent: json['points_spent'] as int? ?? 0,
+      code: (json['voucher_code'] ?? json['code'] ?? '') as String,
+      status: json['status'] as String? ?? 'pending',
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
